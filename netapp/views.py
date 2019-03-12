@@ -6,3 +6,8 @@ from django.views.generic import TemplateView
 @method_decorator(login_required, name='dispatch')
 class HomeTemplate(TemplateView):
     template_name = "home.html"
+
+
+@method_decorator(login_required, name='dispatch')
+class UsersTemplate(TemplateView):
+    template_name = "users.html"

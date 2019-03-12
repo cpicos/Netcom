@@ -1,11 +1,14 @@
+from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.http import Http404
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response, redirect
 
-from rest_framework import generics, status, viewsets
+from rest_framework import generics, status, viewsets, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
+
+from .serializers import UserSerializer
 
 
 class LoginView(APIView):
@@ -25,7 +28,6 @@ class LoginView(APIView):
         username = request.data.get("username")
         password = request.data.get("password")
         user = authenticate(username=username, password=password)
-        print(user)
         if user is not None:
             login(request, user)
             return HttpResponseRedirect('/home/')
@@ -39,3 +41,9 @@ class LogoutView(APIView):
     def get(self, request, ):
         logout(request)
         return redirect('login')
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = User.objects.all()
+    serializer_class = UserSerializer

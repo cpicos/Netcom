@@ -52,7 +52,7 @@
             :right="x === 'right'" :timeout="timeout" :top="y === 'top'" :vertical="mode === 'vertical'"
             :color="snackbar_color">
             [[ snackbar_text ]]
-            <v-btn color="pink" flat @click="snackbar = false">
+            <v-btn color="white" flat @click="snackbar = false">
                 Close
             </v-btn>
         </v-snackbar>
@@ -78,8 +78,9 @@
                                     <v-container grid-list-md>
                                         <v-layout wrap>
                                             <v-flex xs12 sm6 md4>
-                                                <v-text-field ref="txtusername" name="username" v-model="username" :counter="10"
-                                                    :rules="usernameRules" label="Usuario" required autofocus>
+                                                <v-text-field ref="txtusername" name="username" v-model="username"
+                                                    :counter="10" :rules="usernameRules" label="Usuario" required
+                                                    autofocus>
                                                 </v-text-field>
                                             </v-flex>
                                             <v-flex xs12 sm6 md4>
@@ -131,13 +132,14 @@
                                     <v-container grid-list-md>
                                         <v-layout wrap>
                                             <v-flex xs12 sm6 md4>
-                                                <v-text-field ref="txteditusername" name="editusername" v-model="editedItem.username" :counter="10"
-                                                    :rules="usernameRules" label="Usuario" required autofocus readonly>
+                                                <v-text-field ref="txteditusername" name="editusername"
+                                                    v-model="editedItem.username" :counter="10" :rules="usernameRules"
+                                                    label="Usuario" required autofocus readonly>
                                                 </v-text-field>
                                             </v-flex>
                                             <v-flex xs12>
-                                                <v-text-field name="editemail" v-model="editedItem.email" :rules="emailRules"
-                                                    label="Correo" required></v-text-field>
+                                                <v-text-field name="editemail" v-model="editedItem.email"
+                                                    :rules="emailRules" label="Correo" required></v-text-field>
                                             </v-flex>
                                             <v-flex xs12>
                                                 <v-text-field name="editfirst_name" v-model="editedItem.first_name"
@@ -146,6 +148,10 @@
                                             <v-flex xs12>
                                                 <v-text-field name="editlast_name" v-model="editedItem.last_name"
                                                     :rules="lastNameRules" label="Apellidos" required></v-text-field>
+                                            </v-flex>
+                                            <v-flex xs12>
+                                                <v-checkbox name="editis_active" v-model="editedItem.is_active"
+                                                    :label="`Activo: ${editedItem.is_active.toString()}`"></v-checkbox>
                                             </v-flex>
                                         </v-layout>
                                     </v-container>
@@ -268,14 +274,14 @@
                     (v) => !!v || 'Apellido es requerido'
                 ],
 
-                editedItem:{
+                editedItem: {
                     username: '',
                     email: '',
                     first_name: '',
                     last_name: '',
                     id: '',
                     is_active: ''
-                }
+                },
             },
             created: function () {
                 this.getUsers();
@@ -357,28 +363,30 @@
                 },
 
                 editUser(item) {
-                    console.log(item);
                     this.editedIndex = this.users.indexOf(item)
                     this.editedItem = Object.assign({}, item)
                     this.dialogEdit = true
                 },
 
-                updateUser(){
-                    console.log('HELLO UPDATE!');
+                updateUser() {
                     const params = new URLSearchParams();
-                        params.append('username', this.editedItem.username);
-                        params.append('email', this.editedItem.email);
-                        params.append('first_name', this.editedItem.first_name);
-                        params.append('last_name', this.editedItem.last_name);
-                        params.append('is_active', this.editedItem.is_active);
-                    
-                    axios.patch(urlUsers+this.editedItem.id+'/', params).then(response => {
+                    params.append('username', this.editedItem.username);
+                    params.append('email', this.editedItem.email);
+                    params.append('first_name', this.editedItem.first_name);
+                    params.append('last_name', this.editedItem.last_name);
+                    params.append('is_active', this.editedItem.is_active);
+
+                    axios.patch(urlUsers + this.editedItem.id + '/', params).then(response => {
                         Object.assign(this.users[this.editedIndex], this.editedItem)
                         this.dialogEdit = false;
-                        console.log(response);
+                        this.snackbar = true;
+                        this.snackbar_text = 'Usuario actualizado';
+                        this.snackbar_color = 'success';
                     }).catch(error => {
-                        console.log(error);
-                    }); 
+                        this.snackbar = true;
+                        this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
+                        this.snackbar_color = 'error';
+                    });
                 }
             }
         })

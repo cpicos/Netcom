@@ -49,7 +49,8 @@
 
     <v-app id="app">
         <v-snackbar v-model="snackbar" :bottom="y === 'bottom'" :left="x === 'left'" :multi-line="mode === 'multi-line'"
-            :right="x === 'right'" :timeout="timeout" :top="y === 'top'" :vertical="mode === 'vertical'">
+            :right="x === 'right'" :timeout="timeout" :top="y === 'top'" :vertical="mode === 'vertical'"
+            :color="snackbar_color">
             [[ snackbar_text ]]
             <v-btn color="pink" flat @click="snackbar = false">
                 Close
@@ -61,7 +62,8 @@
                 <v-toolbar flat color="white">
                     <v-toolbar-title>Lista Usuarios</v-toolbar-title>
                     <v-divider class="mx-2" inset vertical></v-divider>
-                    <v-text-field v-model="search" append-icon="search" label="Buscar" single-line hide-details></v-text-field>
+                    <v-text-field v-model="search" append-icon="search" label="Buscar" single-line hide-details>
+                    </v-text-field>
                     <v-spacer></v-spacer>
                     <v-dialog v-model="dialog" scrollable max-width="600px">
                         <template v-slot:activator="{ on }">
@@ -71,7 +73,7 @@
                             <v-card-title><span class="headline">Info Usuario</span></v-card-title>
                             <v-divider></v-divider>
                             <v-card-text>
-                                <v-form method="post" id="userForm" v-model="valid" lazy-validation>{% csrf_token %}
+                                <v-form method="post" id="userForm" v-model="valid" lazy-validation ref="form">{% csrf_token %}
                                     <v-container grid-list-md>
                                         <v-layout wrap>
                                             <v-flex xs12 sm6 md4>
@@ -105,19 +107,21 @@
                                             </v-flex>
                                         </v-layout>
                                     </v-container>
+                                </v-form>
                             </v-card-text>
                             <v-divider></v-divider>
                             <v-card-actions>
                                 <v-spacer></v-spacer>
                                 <v-btn color="blue darken-1" flat @click="dialog = false">Cancelar</v-btn>
+                                <v-btn color="blue darken-1" flat @click="resetForm">Limpiar</v-btn>
                                 <v-btn color="blue darken-1" flat @click="saveUser" :disabled="!valid">Guardar
                                 </v-btn>
                             </v-card-actions>
                         </v-card>
-                        </v-card>
                     </v-dialog>
 
                 </v-toolbar>
+
                 <v-data-table :headers="headers" :items="users" :search="search" class="elevation-1">
                     <template v-slot:items="props">
                         <td>[[ props.item.id ]]</td>
@@ -127,17 +131,14 @@
                         <td class="text-xs-left">[[ props.item.last_name ]]</td>
                         <td class="text-xs-left">[[ props.item.is_active ]]</td>
                         <td class="justify-center layout px-0">
-                            <v-icon small class="mr-2" @click="editItem(props.item)">edit</v-icon>
-                            <v-icon small @click="deleteItem(props.item)">delete</v-icon>
+                            <!-- <v-icon small class="mr-2" @click="editItem(props.item)">edit</v-icon> -->
+                            <v-icon small @click="deleteUser(props.item)">delete</v-icon>
                         </td>
                     </template>
                 </v-data-table>
             </div>
         </template>
     </v-app>
-
-
-
 
 
     <script src="http://code.jquery.com/jquery-3.3.1.min.js"
@@ -155,6 +156,9 @@
 
     <script>
         var urlUsers = '/api/users/';
+        axios.defaults.xsrfCookieName = 'csrftoken'
+        axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+        
         var app = new Vue({
             delimiters: ['[[', ']]'],
             el: '#app',
@@ -177,11 +181,12 @@
                 ],
 
                 snackbar: false,
+                snackbar_text: '',
+                snackbar_color: '',
                 y: 'vertical',
                 x: null,
                 mode: '',
                 timeout: 3000,
-                snackbar_text: '',
 
                 dialog: false,
                 valid: false,
@@ -221,11 +226,17 @@
             created: function () {
                 this.getUsers();
             },
+
             methods: {
                 confirmPassword() {
                     return (this.password === this.confirmpass) ? '' : 'Contraseña no coincide'
                 },
-                getUsers: function () {
+
+                resetForm(){
+                    this.$refs.form.reset();
+                },
+
+                getUsers() {
                     axios.get(urlUsers).then(response => {
                         this.users = response.data;
                     });
@@ -240,13 +251,12 @@
                         params.append('first_name', this.first_name);
                         params.append('last_name', this.last_name);
                         params.append('is_active', false);
-                        params.append('csrfmiddlewaretoken', $('input[name="csrfmiddlewaretoken"]').val());
 
                         axios.post(urlUsers, params).then(response => {
-                            console.log(response.data);
                             this.dialog = false;
                             this.snackbar = true;
                             this.snackbar_text = 'Usuario creado : ' + response.data.username;
+                            this.snackbar_color = 'success';
 
                             this.users.push(
                                 {
@@ -257,10 +267,37 @@
                                     'last_name': response.data.last_name,
                                     'is_active': response.data.is_active
                                 })
+                            
+                            this.resetForm();
                         }).catch(error => {
                             this.snackbar = true;
                             this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
+                            this.snackbar_color = 'error';
                         });
+                    }
+                },
+
+                deleteUser(item) {
+                    const index = this.users.indexOf(item);
+                    var result = confirm('Estas seguro de eliminar este elemento?');
+                    if (result) {
+                        if (item != undefined) {                            
+                            axios.delete(urlUsers+item.id+'/').then(response => {
+                                this.users.splice(index, 1);
+                                this.dialog = false;
+                                this.snackbar = true;
+                                this.snackbar_text = 'Usuario eliminado';
+                                this.snackbar_color = 'success';
+                                this.resetForm();
+                            }).catch(error => {
+                                this.snackbar = true;
+                                this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
+                                this.snackbar_color = 'error';
+                            });
+                        }
+                    }
+                    else {
+                        console.log('delete cancelled');
                     }
                 }
             }

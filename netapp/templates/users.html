@@ -73,11 +73,12 @@
                             <v-card-title><span class="headline">Info Usuario</span></v-card-title>
                             <v-divider></v-divider>
                             <v-card-text>
-                                <v-form method="post" id="userForm" v-model="valid" lazy-validation ref="form">{% csrf_token %}
+                                <v-form method="post" id="userForm" v-model="valid" lazy-validation ref="form">
+                                    {% csrf_token %}
                                     <v-container grid-list-md>
                                         <v-layout wrap>
                                             <v-flex xs12 sm6 md4>
-                                                <v-text-field name="username" v-model="username" :counter="10"
+                                                <v-text-field ref="txtusername" name="username" v-model="username" :counter="10"
                                                     :rules="usernameRules" label="Usuario" required autofocus>
                                                 </v-text-field>
                                             </v-flex>
@@ -120,6 +121,46 @@
                         </v-card>
                     </v-dialog>
 
+                    <v-dialog v-model="dialogEdit" scrollable max-width="600px">
+                        <v-card>
+                            <v-card-title><span class="headline">Editar Usuario</span></v-card-title>
+                            <v-divider></v-divider>
+                            <v-card-text>
+                                <v-form method="post" id="userEditForm" v-model="valid" lazy-validation ref="editForm">
+                                    {% csrf_token %}
+                                    <v-container grid-list-md>
+                                        <v-layout wrap>
+                                            <v-flex xs12 sm6 md4>
+                                                <v-text-field ref="txteditusername" name="editusername" v-model="editedItem.username" :counter="10"
+                                                    :rules="usernameRules" label="Usuario" required autofocus readonly>
+                                                </v-text-field>
+                                            </v-flex>
+                                            <v-flex xs12>
+                                                <v-text-field name="editemail" v-model="editedItem.email" :rules="emailRules"
+                                                    label="Correo" required></v-text-field>
+                                            </v-flex>
+                                            <v-flex xs12>
+                                                <v-text-field name="editfirst_name" v-model="editedItem.first_name"
+                                                    :rules="firstNameRules" label="Nombres" required></v-text-field>
+                                            </v-flex>
+                                            <v-flex xs12>
+                                                <v-text-field name="editlast_name" v-model="editedItem.last_name"
+                                                    :rules="lastNameRules" label="Apellidos" required></v-text-field>
+                                            </v-flex>
+                                        </v-layout>
+                                    </v-container>
+                                </v-form>
+                            </v-card-text>
+                            <v-divider></v-divider>
+                            <v-card-actions>
+                                <v-spacer></v-spacer>
+                                <v-btn color="blue darken-1" flat @click="dialogEdit = false">Cancelar</v-btn>
+                                <v-btn color="blue darken-1" flat @click="updateUser" :disabled="!valid">Guardar
+                                </v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-dialog>
+
                 </v-toolbar>
 
                 <v-data-table :headers="headers" :items="users" :search="search" class="elevation-1">
@@ -131,7 +172,7 @@
                         <td class="text-xs-left">[[ props.item.last_name ]]</td>
                         <td class="text-xs-left">[[ props.item.is_active ]]</td>
                         <td class="justify-center layout px-0">
-                            <!-- <v-icon small class="mr-2" @click="editItem(props.item)">edit</v-icon> -->
+                            <v-icon small class="mr-2" @click="editUser(props.item)">edit</v-icon>
                             <v-icon small @click="deleteUser(props.item)">delete</v-icon>
                         </td>
                     </template>
@@ -158,7 +199,7 @@
         var urlUsers = '/api/users/';
         axios.defaults.xsrfCookieName = 'csrftoken'
         axios.defaults.xsrfHeaderName = 'X-CSRFToken'
-        
+
         var app = new Vue({
             delimiters: ['[[', ']]'],
             el: '#app',
@@ -189,9 +230,11 @@
                 timeout: 3000,
 
                 dialog: false,
+                dialogEdit: false,
                 valid: false,
 
                 username: '',
+                editusername: '',
                 usernameRules: [
                     (v) => !!v || 'Usuario es requerido',
                     (v) => (v && v.length <= 10) || 'Usuario debe ser menos de 10 caracteres'
@@ -208,20 +251,31 @@
                 ],
 
                 email: '',
+                editemail: '',
                 emailRules: [
                     (v) => /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'Correo debe ser valido'
                 ],
 
                 first_name: '',
+                editfirst_name: '',
                 firstNameRules: [
                     (v) => !!v || 'Nombre es requerido'
                 ],
 
                 last_name: '',
+                editlast_name: '',
                 lastNameRules: [
                     (v) => !!v || 'Apellido es requerido'
-                ]
+                ],
 
+                editedItem:{
+                    username: '',
+                    email: '',
+                    first_name: '',
+                    last_name: '',
+                    id: '',
+                    is_active: ''
+                }
             },
             created: function () {
                 this.getUsers();
@@ -232,8 +286,9 @@
                     return (this.password === this.confirmpass) ? '' : 'Contraseña no coincide'
                 },
 
-                resetForm(){
+                resetForm() {
                     this.$refs.form.reset();
+                    this.$refs.txtusername.focus();
                 },
 
                 getUsers() {
@@ -267,7 +322,7 @@
                                     'last_name': response.data.last_name,
                                     'is_active': response.data.is_active
                                 })
-                            
+
                             this.resetForm();
                         }).catch(error => {
                             this.snackbar = true;
@@ -281,8 +336,8 @@
                     const index = this.users.indexOf(item);
                     var result = confirm('Estas seguro de eliminar este elemento?');
                     if (result) {
-                        if (item != undefined) {                            
-                            axios.delete(urlUsers+item.id+'/').then(response => {
+                        if (item != undefined) {
+                            axios.delete(urlUsers + item.id + '/').then(response => {
                                 this.users.splice(index, 1);
                                 this.dialog = false;
                                 this.snackbar = true;
@@ -299,6 +354,31 @@
                     else {
                         console.log('delete cancelled');
                     }
+                },
+
+                editUser(item) {
+                    console.log(item);
+                    this.editedIndex = this.users.indexOf(item)
+                    this.editedItem = Object.assign({}, item)
+                    this.dialogEdit = true
+                },
+
+                updateUser(){
+                    console.log('HELLO UPDATE!');
+                    const params = new URLSearchParams();
+                        params.append('username', this.editedItem.username);
+                        params.append('email', this.editedItem.email);
+                        params.append('first_name', this.editedItem.first_name);
+                        params.append('last_name', this.editedItem.last_name);
+                        params.append('is_active', this.editedItem.is_active);
+                    
+                    axios.patch(urlUsers+this.editedItem.id+'/', params).then(response => {
+                        Object.assign(this.users[this.editedIndex], this.editedItem)
+                        this.dialogEdit = false;
+                        console.log(response);
+                    }).catch(error => {
+                        console.log(error);
+                    });
                 }
             }
         })

@@ -84,11 +84,22 @@ WSGI_APPLICATION = 'netproject.wsgi.application'
 #     }
 # }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'netcomdb',
+#         'USER': 'root',
+#         'PASSWORD': 'root',
+#         'HOST': '127.0.0.1',
+#         'PORT': '3306',
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'netcomdb',
-        'USER': 'root',
+        'USER': 'cpicos1',
         'PASSWORD': 'root',
         'HOST': '127.0.0.1',
         'PORT': '3306',

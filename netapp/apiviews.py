@@ -8,7 +8,8 @@ from rest_framework import generics, status, viewsets, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .serializers import UserSerializer
+from .models import Client
+from .serializers import UserSerializer, ClientSerializer
 
 
 class LoginView(APIView):
@@ -47,3 +48,9 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class ClientViewSet(viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = Client.objects.all()
+    serializer_class = ClientSerializer

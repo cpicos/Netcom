@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from .models import Client
 
 from rest_framework import serializers
 
@@ -29,3 +30,35 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+class ClientSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Client
+        fields = ('id', 'name', 'dba', 'rfc', 'address', 'postal_code', 'created_at', 'created_by') 
+        extra_kwargs = {
+            'id': {'read_only': True},
+            'name': {'required': True},
+            'dba': {'required': True},
+            'rfc': {'required': True},
+            'address': {'required': True},
+            'postal_code': {'required': True},
+            'created_at': {'read_only': True},
+            'created_by': {'read_only': True}
+        }
+    
+    def create(self, validated_data):
+        user = None
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            user = request.user
+
+        client = Client(
+            name = validated_data['name'],
+            dba = validated_data['dba'],
+            rfc = validated_data['rfc'],
+            address = validated_data['address'],
+            postal_code = validated_data['postal_code'],
+            created_by = user
+        )
+        client.save()
+        return client

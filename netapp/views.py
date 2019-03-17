@@ -11,3 +11,8 @@ class HomeTemplate(TemplateView):
 @method_decorator(login_required, name='dispatch')
 class UsersTemplate(TemplateView):
     template_name = "users.html"
+
+
+@method_decorator(login_required, name='dispatch')
+class ClientsTemplate(TemplateView):
+    template_name = "clients.html"

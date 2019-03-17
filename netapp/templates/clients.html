@@ -7,7 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
 
-    <title>Usuarios</title>
+    <title>Clientes</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
         integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
@@ -26,10 +26,10 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/home/">Home <span class="sr-only">(current)</span></a>
                 </li>
-                <li class="nav-item active">
+                <li class="nav-item">
                     <a class="nav-link" href="/users/">Usuarios <span class="sr-only">(current)</span></a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item active">
                     <a class="nav-link" href="/clients/">Clientes <span class="sr-only">(current)</span></a>
                 </li>
             </ul>
@@ -50,7 +50,7 @@
         </div>
     </nav>
 
-    <v-app id="app">
+    <!-- <v-app id="app">
         <v-snackbar v-model="snackbar" :bottom="y === 'bottom'" :left="x === 'left'" :multi-line="mode === 'multi-line'"
             :right="x === 'right'" :timeout="timeout" :top="y === 'top'" :vertical="mode === 'vertical'"
             :color="snackbar_color">
@@ -68,7 +68,6 @@
                     <v-spacer></v-spacer>
                     <v-dialog v-model="dialog" scrollable max-width="600px">
                         <template v-slot:activator="{ on }">
-                            <!-- <v-btn color="primary" dark class="mb-2" v-on="on">+</v-btn> -->
                             <v-btn color="primary" dark class="mb-2" v-on="on">
                                 <v-icon medium class="mr-2">add account_box
                                 </v-icon>
@@ -194,7 +193,7 @@
                 </v-data-table>
             </div>
         </template>
-    </v-app>
+    </v-app> -->
 
 
     <script src="http://code.jquery.com/jquery-3.3.1.min.js"
@@ -210,7 +209,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
 
-    <script>
+    <!-- <script>
         var urlUsers = '/api/users/';
         axios.defaults.xsrfCookieName = 'csrftoken'
         axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -399,7 +398,7 @@
                 }
             }
         })
-    </script>
+    </script> -->
 </body>
 
 </html>

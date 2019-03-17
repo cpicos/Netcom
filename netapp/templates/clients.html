@@ -50,7 +50,7 @@
         </div>
     </nav>
 
-    <!-- <v-app id="app">
+    <v-app id="app">
         <v-snackbar v-model="snackbar" :bottom="y === 'bottom'" :left="x === 'left'" :multi-line="mode === 'multi-line'"
             :right="x === 'right'" :timeout="timeout" :top="y === 'top'" :vertical="mode === 'vertical'"
             :color="snackbar_color">
@@ -63,7 +63,7 @@
         <template>
             <div>
                 <v-toolbar flat color="white">
-                    <v-toolbar-title>Lista Usuarios</v-toolbar-title>
+                    <v-toolbar-title>Lista Clientes</v-toolbar-title>
                     <v-divider class="mx-2" inset vertical></v-divider>
                     <v-spacer></v-spacer>
                     <v-dialog v-model="dialog" scrollable max-width="600px">
@@ -74,42 +74,34 @@
                             </v-btn>
                         </template>
                         <v-card>
-                            <v-card-title><span class="headline">Info Usuario</span></v-card-title>
+                            <v-card-title><span class="headline">Info CLientes</span></v-card-title>
                             <v-divider></v-divider>
                             <v-card-text style="height: 400px;">
-                                <v-form method="post" id="userForm" v-model="valid" lazy-validation ref="form">
+                                <v-form method="post" id="clientForm" v-model="valid" lazy-validation ref="form">
                                     {% csrf_token %}
                                     <v-container grid-list-md>
                                         <v-layout wrap>
-                                            <v-flex xs12 sm6 md4>
-                                                <v-text-field ref="txtusername" name="username" v-model="username"
-                                                    :counter="10" :rules="usernameRules" label="Usuario" required
+                                            <v-flex xs12>
+                                                <v-text-field ref="txtname" name="name" v-model="name"
+                                                    :counter="100" :rules="nameRules" label="Nombre" required
                                                     autofocus>
                                                 </v-text-field>
                                             </v-flex>
-                                            <v-flex xs12 sm6 md4>
-                                                <v-text-field name="password" v-model="password" :rules="passwordRules"
-                                                    label="Contraseña" type="password" required></v-text-field>
-                                            </v-flex>
-                                            <v-flex xs12 sm6 md4>
-                                                <v-text-field name="confirmpass" v-model="confirmpass"
-                                                    :rules="confirmpassRules" :error-messages='confirmPassword()'
-                                                    label="Confirmar Contraseña" type="password" required>
-                                                </v-text-field>
-                                            </v-flex>
-
                                             <v-flex xs12>
-                                                <v-text-field name="email" v-model="email" :rules="emailRules"
-                                                    label="Correo" required></v-text-field>
-                                            </v-flex>
-
-                                            <v-flex xs12>
-                                                <v-text-field name="first_name" v-model="first_name"
-                                                    :rules="firstNameRules" label="Nombres" required></v-text-field>
+                                                <v-text-field name="dba" v-model="dba"
+                                                    :rules="dbaRules" label="DBA" required></v-text-field>
                                             </v-flex>
                                             <v-flex xs12>
-                                                <v-text-field name="last_name" v-model="last_name"
-                                                    :rules="lastNameRules" label="Apellidos" required></v-text-field>
+                                                <v-text-field name="rfc" v-model="rfc"
+                                                    :rules="rfcRules" label="RFC" required></v-text-field>
+                                            </v-flex>
+                                            <v-flex xs12>
+                                                <v-text-field name="address" v-model="address"
+                                                    :rules="addressRules" label="Dirección" required></v-text-field>
+                                            </v-flex>
+                                            <v-flex xs12>
+                                                <v-text-field name="postal_code" v-model="postal_code"
+                                                    :rules="postalcodeRules" label="Código Postal" required></v-text-field>
                                             </v-flex>
                                         </v-layout>
                                     </v-container>
@@ -120,7 +112,7 @@
                                 <v-spacer></v-spacer>
                                 <v-btn color="blue darken-1" flat @click="dialog = false">Cancelar</v-btn>
                                 <v-btn color="blue darken-1" flat @click="resetForm">Limpiar</v-btn>
-                                <v-btn color="blue darken-1" flat @click="saveUser" :disabled="!valid">Guardar
+                                <v-btn color="blue darken-1" flat @click="saveClient" :disabled="!valid">Guardar
                                 </v-btn>
                             </v-card-actions>
                         </v-card>
@@ -128,34 +120,34 @@
 
                     <v-dialog v-model="dialogEdit" scrollable max-width="600px">
                         <v-card>
-                            <v-card-title><span class="headline">Editar Usuario</span></v-card-title>
+                            <v-card-title><span class="headline">Editar CLiente</span></v-card-title>
                             <v-divider></v-divider>
                             <v-card-text style="height: 400px;">
-                                <v-form method="post" id="userEditForm" v-model="valid" lazy-validation ref="editForm">
+                                <v-form method="post" id="clientEditForm" v-model="valid" lazy-validation ref="editForm">
                                     {% csrf_token %}
                                     <v-container grid-list-md>
                                         <v-layout wrap>
                                             <v-flex xs12 sm6 md4>
-                                                <v-text-field ref="txteditusername" name="editusername"
-                                                    v-model="editedItem.username" :counter="10" :rules="usernameRules"
-                                                    label="Usuario" required autofocus readonly>
+                                                <v-text-field ref="txteditname" name="editname"
+                                                    v-model="editedItem.name" :counter="10" :rules="nameRules"
+                                                    label="Nombre" required autofocus>
                                                 </v-text-field>
                                             </v-flex>
                                             <v-flex xs12>
-                                                <v-text-field name="editemail" v-model="editedItem.email"
-                                                    :rules="emailRules" label="Correo" required></v-text-field>
+                                                <v-text-field name="editdba" v-model="editedItem.dba"
+                                                    :rules="dbaRules" label="DBA" required></v-text-field>
                                             </v-flex>
                                             <v-flex xs12>
-                                                <v-text-field name="editfirst_name" v-model="editedItem.first_name"
-                                                    :rules="firstNameRules" label="Nombres" required></v-text-field>
+                                                <v-text-field name="editrfc" v-model="editedItem.rfc"
+                                                    :rules="rfcRules" label="RFC" required></v-text-field>
                                             </v-flex>
                                             <v-flex xs12>
-                                                <v-text-field name="editlast_name" v-model="editedItem.last_name"
-                                                    :rules="lastNameRules" label="Apellidos" required></v-text-field>
+                                                <v-text-field name="editaddress" v-model="editedItem.address"
+                                                    :rules="addressRules" label="Dirección" required></v-text-field>
                                             </v-flex>
                                             <v-flex xs12>
-                                                <v-checkbox name="editis_active" v-model="editedItem.is_active"
-                                                    :label="`Activo: ${editedItem.is_active.toString()}`"></v-checkbox>
+                                                <v-text-field name="editpostal_code" v-model="editedItem.postal_code"
+                                                    :rules="postalcodeRules" label="Código Postal" required></v-text-field>
                                             </v-flex>
                                         </v-layout>
                                     </v-container>
@@ -165,7 +157,7 @@
                             <v-card-actions>
                                 <v-spacer></v-spacer>
                                 <v-btn color="blue darken-1" flat @click="dialogEdit = false">Cancelar</v-btn>
-                                <v-btn color="blue darken-1" flat @click="updateUser" :disabled="!valid">Guardar
+                                <v-btn color="blue darken-1" flat @click="updateClient" :disabled="!valid">Guardar
                                 </v-btn>
                             </v-card-actions>
                         </v-card>
@@ -177,23 +169,21 @@
                             </v-text-field>
                 </v-toolbar>
 
-                <v-data-table :headers="headers" :items="users" :search="search" class="elevation-1">
+                <v-data-table :headers="headers" :items="clients" :search="search" class="elevation-1">
                     <template v-slot:items="props">
                         <td>[[ props.item.id ]]</td>
-                        <td class="text-xs-left">[[ props.item.username ]]</td>
-                        <td class="text-xs-left">[[ props.item.email ]]</td>
-                        <td class="text-xs-left">[[ props.item.first_name ]]</td>
-                        <td class="text-xs-left">[[ props.item.last_name ]]</td>
-                        <td class="text-xs-left">[[ props.item.is_active ]]</td>
+                        <td class="text-xs-left">[[ props.item.name ]]</td>
+                        <td class="text-xs-left">[[ props.item.dba ]]</td>
+                        <td class="text-xs-left">[[ props.item.rfc ]]</td>
                         <td class="justify-center layout px-0">
-                            <v-icon small class="mr-2" @click="editUser(props.item)">edit</v-icon>
-                            <v-icon small @click="deleteUser(props.item)">delete</v-icon>
+                            <v-icon small class="mr-2" @click="editClient(props.item)">edit</v-icon>
+                            <v-icon small @click="deleteClient(props.item)">delete</v-icon>
                         </td>
                     </template>
                 </v-data-table>
             </div>
         </template>
-    </v-app> -->
+    </v-app>
 
 
     <script src="http://code.jquery.com/jquery-3.3.1.min.js"
@@ -209,8 +199,8 @@
     <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
 
-    <!-- <script>
-        var urlUsers = '/api/users/';
+    <script>
+        var urlClients = '/api/clients/';
         axios.defaults.xsrfCookieName = 'csrftoken'
         axios.defaults.xsrfHeaderName = 'X-CSRFToken'
 
@@ -218,7 +208,7 @@
             delimiters: ['[[', ']]'],
             el: '#app',
             data: {
-                users: [],
+                clients: [],
                 search: '',
 
                 headers: [
@@ -227,11 +217,9 @@
                         align: 'left',
                         value: 'id'
                     },
-                    { text: 'Usuario', value: 'username' },
-                    { text: 'Correo', value: 'email' },
-                    { text: 'Nombres', value: 'first_name' },
-                    { text: 'Apellidos', value: 'last_name' },
-                    { text: 'Activo', value: 'is_active' },
+                    { text: 'Nombre', value: 'name' },
+                    { text: 'DBA', value: 'dba' },
+                    { text: 'RFC', value: 'rfc' },
                     { text: 'Acciones', value: 'id', sorteable: false }
                 ],
 
@@ -247,120 +235,110 @@
                 dialogEdit: false,
                 valid: false,
 
-                username: '',
-                editusername: '',
-                usernameRules: [
-                    (v) => !!v || 'Usuario es requerido',
-                    (v) => (v && v.length <= 10) || 'Usuario debe ser menos de 10 caracteres'
+                name: '',
+                editname: '',
+                nameRules: [
+                    (v) => !!v || 'Nombre es requerido',
+                    (v) => (v && v.length <= 100) || 'Nombre debe ser menos de 100 caracteres'
                 ],
 
-                password: '',
-                passwordRules: [
-                    (v) => !!v || 'Contraseña es requerido'
+                dba: '',
+                editdba: '',
+                dbaRules: [
+                    (v) => !!v || 'DBA es requerido'
                 ],
 
-                confirmpass: '',
-                confirmpassRules: [
-                    (v) => !!v || 'Contraseña es requerido'
+                rfc: '',
+                editrfc: '',
+                rfcRules: [
+                    (v) => !!v || 'RFC es requerido'
                 ],
 
-                email: '',
-                editemail: '',
-                emailRules: [
-                    (v) => /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'Correo debe ser valido'
+                address: '',
+                editaddress: '',
+                addressRules: [
+                    (v) => !!v || 'Dirección es requerido'
                 ],
 
-                first_name: '',
-                editfirst_name: '',
-                firstNameRules: [
-                    (v) => !!v || 'Nombre es requerido'
-                ],
-
-                last_name: '',
-                editlast_name: '',
-                lastNameRules: [
-                    (v) => !!v || 'Apellido es requerido'
+                postal_code: '',
+                editpostal_code: '',
+                postalcodeRules: [
+                    (v) => !!v || 'Código Postal es requerido'
                 ],
 
                 editedItem: {
-                    username: '',
-                    email: '',
-                    first_name: '',
-                    last_name: '',
+                    name: '',
+                    dba: '',
+                    rfc: '',
+                    address: '',
                     id: '',
-                    is_active: ''
+                    postal_code: ''
                 },
             },
             created: function () {
-                this.getUsers();
+                this.getClients();
             },
 
             methods: {
-                confirmPassword() {
-                    return (this.password === this.confirmpass) ? '' : 'Contraseña no coincide'
-                },
 
                 resetForm() {
                     this.$refs.form.reset();
-                    this.$refs.txtusername.focus();
+                    this.$refs.txtname.focus();
                 },
 
-                getUsers() {
-                    axios.get(urlUsers).then(response => {
-                        this.users = response.data;
+                getClients() {
+                    axios.get(urlClients).then(response => {
+                        this.clients = response.data;
                     });
                 },
 
-                saveUser() {
+                saveClient() {
                     if (this.valid) {
                         const params = new URLSearchParams();
-                        params.append('username', this.username);
-                        params.append('password', this.password);
-                        params.append('email', this.email);
-                        params.append('first_name', this.first_name);
-                        params.append('last_name', this.last_name);
-                        params.append('is_active', false);
+                        params.append('name', this.name);
+                        params.append('dba', this.dba);
+                        params.append('rfc', this.rfc);
+                        params.append('address', this.address);
+                        params.append('postal_code', this.postal_code);
 
-                        axios.post(urlUsers, params).then(response => {
+                        axios.post(urlClients, params).then(response => {
                             this.dialog = false;
                             this.snackbar = true;
-                            this.snackbar_text = 'Usuario creado : ' + response.data.username;
+                            this.snackbar_text = 'Cliente creado : ' + response.data.dba;
                             this.snackbar_color = 'success';
 
-                            this.users.push(
+                            this.clients.push(
                                 {
                                     'id': response.data.id,
-                                    'username': response.data.username,
-                                    'email': response.data.email,
-                                    'first_name': response.data.first_name,
-                                    'last_name': response.data.last_name,
-                                    'is_active': response.data.is_active
+                                    'name': response.data.name,
+                                    'dba': response.data.dba,
+                                    'rfc': response.data.rfc,
                                 })
 
                             this.resetForm();
                         }).catch(error => {
                             this.snackbar = true;
-                            this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
+                            this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error al crear cliente';
                             this.snackbar_color = 'error';
                         });
                     }
                 },
 
-                deleteUser(item) {
-                    const index = this.users.indexOf(item);
+                deleteClient(item) {
+                    const index = this.clients.indexOf(item);
                     var result = confirm('Estas seguro de eliminar este elemento?');
                     if (result) {
                         if (item != undefined) {
-                            axios.delete(urlUsers + item.id + '/').then(response => {
-                                this.users.splice(index, 1);
+                            axios.delete(urlClients + item.id + '/').then(response => {
+                                this.clients.splice(index, 1);
                                 this.dialog = false;
                                 this.snackbar = true;
-                                this.snackbar_text = 'Usuario eliminado';
+                                this.snackbar_text = 'Cliente eliminado';
                                 this.snackbar_color = 'success';
                                 this.resetForm();
                             }).catch(error => {
                                 this.snackbar = true;
-                                this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
+                                this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error eliminar cliente';
                                 this.snackbar_color = 'error';
                             });
                         }
@@ -370,35 +348,35 @@
                     }
                 },
 
-                editUser(item) {
-                    this.editedIndex = this.users.indexOf(item)
+                editClient(item) {
+                    this.editedIndex = this.clients.indexOf(item)
                     this.editedItem = Object.assign({}, item)
                     this.dialogEdit = true
                 },
 
-                updateUser() {
+                updateClient() {
                     const params = new URLSearchParams();
-                    params.append('username', this.editedItem.username);
-                    params.append('email', this.editedItem.email);
-                    params.append('first_name', this.editedItem.first_name);
-                    params.append('last_name', this.editedItem.last_name);
-                    params.append('is_active', this.editedItem.is_active);
+                    params.append('name', this.editedItem.name);
+                    params.append('dba', this.editedItem.dba);
+                    params.append('rfc', this.editedItem.rfc);
+                    params.append('address', this.editedItem.address);
+                    params.append('postal_code', this.editedItem.postal_code);
 
-                    axios.patch(urlUsers + this.editedItem.id + '/', params).then(response => {
-                        Object.assign(this.users[this.editedIndex], this.editedItem)
+                    axios.patch(urlClients + this.editedItem.id + '/', params).then(response => {
+                        Object.assign(this.clients[this.editedIndex], this.editedItem)
                         this.dialogEdit = false;
                         this.snackbar = true;
-                        this.snackbar_text = 'Usuario actualizado';
+                        this.snackbar_text = 'Cliente actualizado';
                         this.snackbar_color = 'success';
                     }).catch(error => {
                         this.snackbar = true;
-                        this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
+                        this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error al editar cliente';
                         this.snackbar_color = 'error';
                     });
                 }
             }
         })
-    </script> -->
+    </script>
 </body>
 
 </html>

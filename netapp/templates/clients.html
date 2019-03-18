@@ -1,384 +1,314 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
-
-    <title>Clientes</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
-        integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-</head>
-
-<body>
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-        <a class="navbar-brand" href="/home/">Netcommtel</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar"
-            aria-controls="navbarsExample04" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbar">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/home/">Home <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/users/">Usuarios <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="nav-item active">
-                    <a class="nav-link" href="/clients/">Clientes <span class="sr-only">(current)</span></a>
-                </li>
-            </ul>
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="/profile/">
-                        <i class="fas fa-user-circle">
-                            {{ request.user }}
-                        </i>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/logout/">
-                        <i class="fas fa-sign-out-alt">logout</i>
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-
-    <v-app id="app">
-        <v-snackbar v-model="snackbar" :bottom="y === 'bottom'" :left="x === 'left'" :multi-line="mode === 'multi-line'"
-            :right="x === 'right'" :timeout="timeout" :top="y === 'top'" :vertical="mode === 'vertical'"
-            :color="snackbar_color">
-            [[ snackbar_text ]]
-            <v-btn color="white" flat @click="snackbar = false">
-                Close
-            </v-btn>
-        </v-snackbar>
-
-        <template>
-            <div>
-                <v-toolbar flat color="white">
-                    <v-toolbar-title>Lista Clientes</v-toolbar-title>
-                    <v-divider class="mx-2" inset vertical></v-divider>
-                    <v-spacer></v-spacer>
-                    <v-dialog v-model="dialog" scrollable max-width="600px">
-                        <template v-slot:activator="{ on }">
-                            <v-btn color="primary" dark class="mb-2" v-on="on">
-                                <v-icon medium class="mr-2">add account_box
-                                </v-icon>
-                            </v-btn>
-                        </template>
-                        <v-card>
-                            <v-card-title><span class="headline">Info CLientes</span></v-card-title>
-                            <v-divider></v-divider>
-                            <v-card-text style="height: 400px;">
-                                <v-form method="post" id="clientForm" v-model="valid" lazy-validation ref="form">
-                                    {% csrf_token %}
-                                    <v-container grid-list-md>
-                                        <v-layout wrap>
-                                            <v-flex xs12>
-                                                <v-text-field ref="txtname" name="name" v-model="name"
-                                                    :counter="100" :rules="nameRules" label="Nombre" required
-                                                    autofocus>
-                                                </v-text-field>
-                                            </v-flex>
-                                            <v-flex xs12>
-                                                <v-text-field name="dba" v-model="dba"
-                                                    :rules="dbaRules" label="DBA" required></v-text-field>
-                                            </v-flex>
-                                            <v-flex xs12>
-                                                <v-text-field name="rfc" v-model="rfc"
-                                                    :rules="rfcRules" label="RFC" required></v-text-field>
-                                            </v-flex>
-                                            <v-flex xs12>
-                                                <v-text-field name="address" v-model="address"
-                                                    :rules="addressRules" label="Dirección" required></v-text-field>
-                                            </v-flex>
-                                            <v-flex xs12>
-                                                <v-text-field name="postal_code" v-model="postal_code"
-                                                    :rules="postalcodeRules" label="Código Postal" required></v-text-field>
-                                            </v-flex>
-                                        </v-layout>
-                                    </v-container>
-                                </v-form>
-                            </v-card-text>
-                            <v-divider></v-divider>
-                            <v-card-actions>
-                                <v-spacer></v-spacer>
-                                <v-btn color="blue darken-1" flat @click="dialog = false">Cancelar</v-btn>
-                                <v-btn color="blue darken-1" flat @click="resetForm">Limpiar</v-btn>
-                                <v-btn color="blue darken-1" flat @click="saveClient" :disabled="!valid">Guardar
-                                </v-btn>
-                            </v-card-actions>
-                        </v-card>
-                    </v-dialog>
-
-                    <v-dialog v-model="dialogEdit" scrollable max-width="600px">
-                        <v-card>
-                            <v-card-title><span class="headline">Editar CLiente</span></v-card-title>
-                            <v-divider></v-divider>
-                            <v-card-text style="height: 400px;">
-                                <v-form method="post" id="clientEditForm" v-model="valid" lazy-validation ref="editForm">
-                                    {% csrf_token %}
-                                    <v-container grid-list-md>
-                                        <v-layout wrap>
-                                            <v-flex xs12 sm6 md4>
-                                                <v-text-field ref="txteditname" name="editname"
-                                                    v-model="editedItem.name" :counter="10" :rules="nameRules"
-                                                    label="Nombre" required autofocus>
-                                                </v-text-field>
-                                            </v-flex>
-                                            <v-flex xs12>
-                                                <v-text-field name="editdba" v-model="editedItem.dba"
-                                                    :rules="dbaRules" label="DBA" required></v-text-field>
-                                            </v-flex>
-                                            <v-flex xs12>
-                                                <v-text-field name="editrfc" v-model="editedItem.rfc"
-                                                    :rules="rfcRules" label="RFC" required></v-text-field>
-                                            </v-flex>
-                                            <v-flex xs12>
-                                                <v-text-field name="editaddress" v-model="editedItem.address"
-                                                    :rules="addressRules" label="Dirección" required></v-text-field>
-                                            </v-flex>
-                                            <v-flex xs12>
-                                                <v-text-field name="editpostal_code" v-model="editedItem.postal_code"
-                                                    :rules="postalcodeRules" label="Código Postal" required></v-text-field>
-                                            </v-flex>
-                                        </v-layout>
-                                    </v-container>
-                                </v-form>
-                            </v-card-text>
-                            <v-divider></v-divider>
-                            <v-card-actions>
-                                <v-spacer></v-spacer>
-                                <v-btn color="blue darken-1" flat @click="dialogEdit = false">Cancelar</v-btn>
-                                <v-btn color="blue darken-1" flat @click="updateClient" :disabled="!valid">Guardar
-                                </v-btn>
-                            </v-card-actions>
-                        </v-card>
-                    </v-dialog>
-
-                </v-toolbar>
-                <v-toolbar flat color="white">
-                        <v-text-field v-model="search" append-icon="search" label="Buscar" single-line hide-details>
-                            </v-text-field>
-                </v-toolbar>
-
-                <v-data-table :headers="headers" :items="clients" :search="search" class="elevation-1">
-                    <template v-slot:items="props">
-                        <td>[[ props.item.id ]]</td>
-                        <td class="text-xs-left">[[ props.item.name ]]</td>
-                        <td class="text-xs-left">[[ props.item.dba ]]</td>
-                        <td class="text-xs-left">[[ props.item.rfc ]]</td>
-                        <td class="justify-center layout px-0">
-                            <v-icon small class="mr-2" @click="editClient(props.item)">edit</v-icon>
-                            <v-icon small @click="deleteClient(props.item)">delete</v-icon>
-                        </td>
+{% block vueapp %}
+<v-app id="app">
+    <v-snackbar v-model="snackbar" :bottom="y === 'bottom'" :left="x === 'left'" :multi-line="mode === 'multi-line'"
+        :right="x === 'right'" :timeout="timeout" :top="y === 'top'" :vertical="mode === 'vertical'"
+        :color="snackbar_color">
+        [[ snackbar_text ]]
+        <v-btn color="white" flat @click="snackbar = false">
+            Close
+        </v-btn>
+    </v-snackbar>
+    <template>
+        <div>
+            <v-toolbar flat color="white">
+                <v-toolbar-title>Lista Clientes</v-toolbar-title>
+                <v-divider class="mx-2" inset vertical></v-divider>
+                <v-spacer></v-spacer>
+                <v-dialog v-model="dialog" scrollable max-width="600px">
+                    <template v-slot:activator="{ on }">
+                        <v-btn color="primary" dark class="mb-2" v-on="on">
+                            <v-icon medium class="mr-2">add account_box
+                            </v-icon>
+                        </v-btn>
                     </template>
-                </v-data-table>
-            </div>
-        </template>
-    </v-app>
+                    <v-card>
+                        <v-card-title><span class="headline">Info CLientes</span></v-card-title>
+                        <v-divider></v-divider>
+                        <v-card-text style="height: 400px;">
+                            <v-form method="post" id="clientForm" v-model="valid" lazy-validation ref="form">
+                                {% csrf_token %}
+                                <v-container grid-list-md>
+                                    <v-layout wrap>
+                                        <v-flex xs12>
+                                            <v-text-field ref="txtname" name="name" v-model="name" :counter="100"
+                                                :rules="nameRules" label="Nombre" required autofocus>
+                                            </v-text-field>
+                                        </v-flex>
+                                        <v-flex xs12>
+                                            <v-text-field name="dba" v-model="dba" :rules="dbaRules" label="DBA"
+                                                required></v-text-field>
+                                        </v-flex>
+                                        <v-flex xs12>
+                                            <v-text-field name="rfc" v-model="rfc" :rules="rfcRules" label="RFC"
+                                                required></v-text-field>
+                                        </v-flex>
+                                        <v-flex xs12>
+                                            <v-text-field name="address" v-model="address" :rules="addressRules"
+                                                label="Dirección" required></v-text-field>
+                                        </v-flex>
+                                        <v-flex xs12>
+                                            <v-text-field name="postal_code" v-model="postal_code"
+                                                :rules="postalcodeRules" label="Código Postal" required></v-text-field>
+                                        </v-flex>
+                                    </v-layout>
+                                </v-container>
+                            </v-form>
+                        </v-card-text>
+                        <v-divider></v-divider>
+                        <v-card-actions>
+                            <v-spacer></v-spacer>
+                            <v-btn color="blue darken-1" flat @click="dialog = false">Cancelar</v-btn>
+                            <v-btn color="blue darken-1" flat @click="resetForm">Limpiar</v-btn>
+                            <v-btn color="blue darken-1" flat @click="saveClient" :disabled="!valid">Guardar
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
 
+                <v-dialog v-model="dialogEdit" scrollable max-width="600px">
+                    <v-card>
+                        <v-card-title><span class="headline">Editar CLiente</span></v-card-title>
+                        <v-divider></v-divider>
+                        <v-card-text style="height: 400px;">
+                            <v-form method="post" id="clientEditForm" v-model="valid" lazy-validation ref="editForm">
+                                {% csrf_token %}
+                                <v-container grid-list-md>
+                                    <v-layout wrap>
+                                        <v-flex xs12 sm6 md4>
+                                            <v-text-field ref="txteditname" name="editname" v-model="editedItem.name"
+                                                :counter="10" :rules="nameRules" label="Nombre" required autofocus>
+                                            </v-text-field>
+                                        </v-flex>
+                                        <v-flex xs12>
+                                            <v-text-field name="editdba" v-model="editedItem.dba" :rules="dbaRules"
+                                                label="DBA" required></v-text-field>
+                                        </v-flex>
+                                        <v-flex xs12>
+                                            <v-text-field name="editrfc" v-model="editedItem.rfc" :rules="rfcRules"
+                                                label="RFC" required></v-text-field>
+                                        </v-flex>
+                                        <v-flex xs12>
+                                            <v-text-field name="editaddress" v-model="editedItem.address"
+                                                :rules="addressRules" label="Dirección" required></v-text-field>
+                                        </v-flex>
+                                        <v-flex xs12>
+                                            <v-text-field name="editpostal_code" v-model="editedItem.postal_code"
+                                                :rules="postalcodeRules" label="Código Postal" required></v-text-field>
+                                        </v-flex>
+                                    </v-layout>
+                                </v-container>
+                            </v-form>
+                        </v-card-text>
+                        <v-divider></v-divider>
+                        <v-card-actions>
+                            <v-spacer></v-spacer>
+                            <v-btn color="blue darken-1" flat @click="dialogEdit = false">Cancelar</v-btn>
+                            <v-btn color="blue darken-1" flat @click="updateClient" :disabled="!valid">Guardar
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
 
-    <script src="http://code.jquery.com/jquery-3.3.1.min.js"
-        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-        crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-        crossorigin="anonymous"></script>
+            </v-toolbar>
+            <v-toolbar flat color="white">
+                <v-text-field v-model="search" append-icon="search" label="Buscar" single-line hide-details>
+                </v-text-field>
+            </v-toolbar>
 
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.8/dist/vue.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+            <v-data-table :headers="headers" :items="clients" :search="search" class="elevation-1">
+                <template v-slot:items="props">
+                    <td>[[ props.item.id ]]</td>
+                    <td class="text-xs-left">[[ props.item.name ]]</td>
+                    <td class="text-xs-left">[[ props.item.dba ]]</td>
+                    <td class="text-xs-left">[[ props.item.rfc ]]</td>
+                    <td class="justify-center layout px-0">
+                        <v-icon small class="mr-2" @click="editClient(props.item)">edit</v-icon>
+                        <v-icon small @click="deleteClient(props.item)">delete</v-icon>
+                    </td>
+                </template>
+            </v-data-table>
+        </div>
+    </template>
+</v-app>
+{% endblock vueapp %}
 
-    <script>
-        var urlClients = '/api/clients/';
-        axios.defaults.xsrfCookieName = 'csrftoken'
-        axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+{% block vuescript %}
+<script>
+    var app = new Vue({
+        delimiters: ['[[', ']]'],
+        el: '#app',
+        data: {
+            clients: [],
+            search: '',
 
-        var app = new Vue({
-            delimiters: ['[[', ']]'],
-            el: '#app',
-            data: {
-                clients: [],
-                search: '',
+            headers: [
+                {
+                    text: 'Id',
+                    align: 'left',
+                    value: 'id'
+                },
+                { text: 'Nombre', value: 'name' },
+                { text: 'DBA', value: 'dba' },
+                { text: 'RFC', value: 'rfc' },
+                { text: 'Acciones', value: 'id', sorteable: false }
+            ],
 
-                headers: [
-                    {
-                        text: 'Id',
-                        align: 'left',
-                        value: 'id'
-                    },
-                    { text: 'Nombre', value: 'name' },
-                    { text: 'DBA', value: 'dba' },
-                    { text: 'RFC', value: 'rfc' },
-                    { text: 'Acciones', value: 'id', sorteable: false }
-                ],
+            snackbar: false,
+            snackbar_text: '',
+            snackbar_color: '',
+            y: 'vertical',
+            x: null,
+            mode: '',
+            timeout: 3000,
 
-                snackbar: false,
-                snackbar_text: '',
-                snackbar_color: '',
-                y: 'vertical',
-                x: null,
-                mode: '',
-                timeout: 3000,
+            dialog: false,
+            dialogEdit: false,
+            valid: false,
 
-                dialog: false,
-                dialogEdit: false,
-                valid: false,
+            name: '',
+            editname: '',
+            nameRules: [
+                (v) => !!v || 'Nombre es requerido',
+                (v) => (v && v.length <= 100) || 'Nombre debe ser menos de 100 caracteres'
+            ],
 
+            dba: '',
+            editdba: '',
+            dbaRules: [
+                (v) => !!v || 'DBA es requerido'
+            ],
+
+            rfc: '',
+            editrfc: '',
+            rfcRules: [
+                (v) => !!v || 'RFC es requerido'
+            ],
+
+            address: '',
+            editaddress: '',
+            addressRules: [
+                (v) => !!v || 'Dirección es requerido'
+            ],
+
+            postal_code: '',
+            editpostal_code: '',
+            postalcodeRules: [
+                (v) => !!v || 'Código Postal es requerido'
+            ],
+
+            editedItem: {
                 name: '',
-                editname: '',
-                nameRules: [
-                    (v) => !!v || 'Nombre es requerido',
-                    (v) => (v && v.length <= 100) || 'Nombre debe ser menos de 100 caracteres'
-                ],
-
                 dba: '',
-                editdba: '',
-                dbaRules: [
-                    (v) => !!v || 'DBA es requerido'
-                ],
-
                 rfc: '',
-                editrfc: '',
-                rfcRules: [
-                    (v) => !!v || 'RFC es requerido'
-                ],
-
                 address: '',
-                editaddress: '',
-                addressRules: [
-                    (v) => !!v || 'Dirección es requerido'
-                ],
-
-                postal_code: '',
-                editpostal_code: '',
-                postalcodeRules: [
-                    (v) => !!v || 'Código Postal es requerido'
-                ],
-
-                editedItem: {
-                    name: '',
-                    dba: '',
-                    rfc: '',
-                    address: '',
-                    id: '',
-                    postal_code: ''
-                },
+                id: '',
+                postal_code: ''
             },
-            created: function () {
-                this.getClients();
+        },
+        created: function () {
+            this.getClients();
+        },
+
+        methods: {
+
+            resetForm() {
+                this.$refs.form.reset();
+                this.$refs.txtname.focus();
             },
 
-            methods: {
+            getClients() {
+                axios.get(urlClients).then(response => {
+                    this.clients = response.data;
+                });
+            },
 
-                resetForm() {
-                    this.$refs.form.reset();
-                    this.$refs.txtname.focus();
-                },
-
-                getClients() {
-                    axios.get(urlClients).then(response => {
-                        this.clients = response.data;
-                    });
-                },
-
-                saveClient() {
-                    if (this.valid) {
-                        const params = new URLSearchParams();
-                        params.append('name', this.name);
-                        params.append('dba', this.dba);
-                        params.append('rfc', this.rfc);
-                        params.append('address', this.address);
-                        params.append('postal_code', this.postal_code);
-
-                        axios.post(urlClients, params).then(response => {
-                            this.dialog = false;
-                            this.snackbar = true;
-                            this.snackbar_text = 'Cliente creado : ' + response.data.dba;
-                            this.snackbar_color = 'success';
-
-                            this.clients.push(
-                                {
-                                    'id': response.data.id,
-                                    'name': response.data.name,
-                                    'dba': response.data.dba,
-                                    'rfc': response.data.rfc,
-                                    'postal_code': response.data.postal_code,
-                                    'address': response.data.address
-                                })
-
-                            this.resetForm();
-                        }).catch(error => {
-                            this.snackbar = true;
-                            this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error al crear cliente';
-                            this.snackbar_color = 'error';
-                        });
-                    }
-                },
-
-                deleteClient(item) {
-                    const index = this.clients.indexOf(item);
-                    var result = confirm('Estas seguro de eliminar este elemento?');
-                    if (result) {
-                        if (item != undefined) {
-                            axios.delete(urlClients + item.id + '/').then(response => {
-                                this.clients.splice(index, 1);
-                                this.dialog = false;
-                                this.snackbar = true;
-                                this.snackbar_text = 'Cliente eliminado';
-                                this.snackbar_color = 'success';
-                                this.resetForm();
-                            }).catch(error => {
-                                this.snackbar = true;
-                                this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error eliminar cliente';
-                                this.snackbar_color = 'error';
-                            });
-                        }
-                    }
-                    else {
-                        console.log('delete cancelled');
-                    }
-                },
-
-                editClient(item) {
-                    this.editedIndex = this.clients.indexOf(item)
-                    this.editedItem = Object.assign({}, item)
-                    this.dialogEdit = true
-                },
-
-                updateClient() {
+            saveClient() {
+                if (this.valid) {
                     const params = new URLSearchParams();
-                    params.append('name', this.editedItem.name);
-                    params.append('dba', this.editedItem.dba);
-                    params.append('rfc', this.editedItem.rfc);
-                    params.append('address', this.editedItem.address);
-                    params.append('postal_code', this.editedItem.postal_code);
+                    params.append('name', this.name);
+                    params.append('dba', this.dba);
+                    params.append('rfc', this.rfc);
+                    params.append('address', this.address);
+                    params.append('postal_code', this.postal_code);
 
-                    axios.patch(urlClients + this.editedItem.id + '/', params).then(response => {
-                        Object.assign(this.clients[this.editedIndex], this.editedItem)
-                        this.dialogEdit = false;
+                    axios.post(urlClients, params).then(response => {
+                        this.dialog = false;
                         this.snackbar = true;
-                        this.snackbar_text = 'Cliente actualizado';
+                        this.snackbar_text = 'Cliente creado : ' + response.data.dba;
                         this.snackbar_color = 'success';
+
+                        this.clients.push(
+                            {
+                                'id': response.data.id,
+                                'name': response.data.name,
+                                'dba': response.data.dba,
+                                'rfc': response.data.rfc,
+                                'postal_code': response.data.postal_code,
+                                'address': response.data.address
+                            })
+
+                        this.resetForm();
                     }).catch(error => {
                         this.snackbar = true;
-                        this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error al editar cliente';
+                        this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error al crear cliente';
                         this.snackbar_color = 'error';
                     });
                 }
-            }
-        })
-    </script>
-</body>
+            },
 
-</html>
+            deleteClient(item) {
+                const index = this.clients.indexOf(item);
+                var result = confirm('Estas seguro de eliminar este elemento?');
+                if (result) {
+                    if (item != undefined) {
+                        axios.delete(urlClients + item.id + '/').then(response => {
+                            this.clients.splice(index, 1);
+                            this.dialog = false;
+                            this.snackbar = true;
+                            this.snackbar_text = 'Cliente eliminado';
+                            this.snackbar_color = 'success';
+                            this.resetForm();
+                        }).catch(error => {
+                            this.snackbar = true;
+                            this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error eliminar cliente';
+                            this.snackbar_color = 'error';
+                        });
+                    }
+                }
+                else {
+                    console.log('delete cancelled');
+                }
+            },
+
+            editClient(item) {
+                this.editedIndex = this.clients.indexOf(item)
+                this.editedItem = Object.assign({}, item)
+                this.dialogEdit = true
+            },
+
+            updateClient() {
+                const params = new URLSearchParams();
+                params.append('name', this.editedItem.name);
+                params.append('dba', this.editedItem.dba);
+                params.append('rfc', this.editedItem.rfc);
+                params.append('address', this.editedItem.address);
+                params.append('postal_code', this.editedItem.postal_code);
+
+                axios.patch(urlClients + this.editedItem.id + '/', params).then(response => {
+                    Object.assign(this.clients[this.editedIndex], this.editedItem)
+                    this.dialogEdit = false;
+                    this.snackbar = true;
+                    this.snackbar_text = 'Cliente actualizado';
+                    this.snackbar_color = 'success';
+                }).catch(error => {
+                    this.snackbar = true;
+                    this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error al editar cliente';
+                    this.snackbar_color = 'error';
+                });
+            }
+        }
+    })
+</script>
+{% endblock vuescript %}

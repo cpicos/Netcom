@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from django.contrib.auth import authenticate, login, logout
 from django.http import Http404
 from django.http import HttpResponseRedirect
@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .models import Client
-from .serializers import UserSerializer, ClientSerializer
+from .serializers import UserSerializer, ClientSerializer, UserPermissionSerializer
 
 
 class LoginView(APIView):
@@ -54,3 +54,20 @@ class ClientViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
+
+
+class UserPermViewSet(viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = User.objects.all()
+    serializer_class = UserPermissionSerializer
+
+
+    def partial_update(self, request, *args, **kwargs):
+        request = self.request
+        user_id = request.POST.get('user_id')
+        perm_id = request.POST.get('perm_id')
+        user = User.objects.get(id=user_id)
+        permission = Permission.objects.get(id=perm_id)
+        user.user_permissions.remove(permission)
+        serializer = UserPermissionSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)

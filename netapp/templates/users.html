@@ -17,6 +17,7 @@
                 <v-toolbar-title>Lista Usuarios</v-toolbar-title>
                 <v-divider class="mx-2" inset vertical></v-divider>
                 <v-spacer></v-spacer>
+
                 <v-dialog v-model="dialog" scrollable max-width="600px">
                     <template v-slot:activator="{ on }">
                         <!-- <v-btn color="primary" dark class="mb-2" v-on="on">+</v-btn> -->
@@ -122,6 +123,36 @@
                     </v-card>
                 </v-dialog>
 
+                <v-dialog v-model="dialogUserSettings" scrollable max-width="600px">
+                    <v-card>
+                        <v-card-title><span class="headline">Configurar Usuario</span></v-card-title>
+                        <v-divider></v-divider>
+                        <v-card-text style="height: 400px;">
+
+                            <v-list two-line>
+                                <template v-for="(perm, index) in editedItem.available_permissions">
+                                    <v-list-tile :key="perm.id" avatar ripple @click="changePerm(perm, editedItem)">
+                                        <v-list-tile-content>
+                                            <v-list-tile-title>[[ perm.codename ]]</v-list-tile-title>
+                                        </v-list-tile-content>
+                                        <v-list-tile-action>
+                                            <v-icon v-if="!perm.chosen" color="grey lighten-1">
+                                                star_border
+                                            </v-icon>
+                                            <v-icon v-else color="yellow darken-2">
+                                                star
+                                            </v-icon>
+                                        </v-list-tile-action>
+                                    </v-list-tile>
+                                    <v-divider v-if="index + 1 < editedItem.available_permissions.length" :key="index">
+                                    </v-divider>
+                                </template>
+                            </v-list>
+                        </v-card-text>
+                        <v-card-actions></v-card-actions>
+                    </v-card>
+                </v-dialog>
+
             </v-toolbar>
             <v-toolbar flat color="white">
                 <v-text-field v-model="search" append-icon="search" label="Buscar" single-line hide-details>
@@ -137,6 +168,7 @@
                     <td class="text-xs-left">[[ props.item.last_name ]]</td>
                     <td class="text-xs-left">[[ props.item.is_active ]]</td>
                     <td class="justify-center layout px-0">
+                        <v-icon small class="mr-2" @click="editUserSettings(props.item)">settings</v-icon>
                         <v-icon small class="mr-2" @click="editUser(props.item)">edit</v-icon>
                         <v-icon small @click="deleteUser(props.item)">delete</v-icon>
                     </td>
@@ -180,6 +212,7 @@
 
             dialog: false,
             dialogEdit: false,
+            dialogUserSettings: false,
             valid: false,
 
             username: '',
@@ -223,8 +256,12 @@
                 first_name: '',
                 last_name: '',
                 id: '',
-                is_active: ''
+                is_active: '',
+                available_permissions: ''
             },
+
+            /*TESTING*/
+            perms: []
         },
         created: function () {
             this.getUsers();
@@ -330,6 +367,50 @@
                     this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
                     this.snackbar_color = 'error';
                 });
+            },
+
+            /*USER SETTINGS*/
+
+            editUserSettings(item) {
+                this.editedIndex = this.users.indexOf(item)
+                this.editedItem = Object.assign({}, item)
+                this.dialogUserSettings = true
+            },
+
+            changePerm(perm, user) {
+                const params = new URLSearchParams();
+                params.append('user_id', user.id);
+                params.append('perm_id', perm.id);
+
+                if (perm.chosen) {
+                    axios.patch(urlUserPerms + user.id + '/', params).then(response => {
+                        this.snackbar = true;
+                        this.snackbar_text = 'Permiso modificado : ' + perm.codename;
+                        this.snackbar_color = 'warning';
+                        this.editedItem.available_permissions = response.data.available_permissions;
+                        Object.assign(this.users[this.editedIndex], this.editedItem)
+                        
+                    }).catch(error => {
+                        this.snackbar = true;
+                        this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Error al modificar permiso';
+                        this.snackbar_color = 'error';
+                    });
+
+
+                }
+                else {
+                    axios.post(urlUserPerms, params).then(response => {
+                        this.snackbar = true;
+                        this.snackbar_text = 'Permiso modificado : ' + perm.codename;
+                        this.snackbar_color = 'success';
+                        this.editedItem.available_permissions = response.data.available_permissions;
+                        Object.assign(this.users[this.editedIndex], this.editedItem)
+                    }).catch(error => {
+                        this.snackbar = true;
+                        this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Error al modificar permiso';
+                        this.snackbar_color = 'error';
+                    });
+                }
             }
         }
     })

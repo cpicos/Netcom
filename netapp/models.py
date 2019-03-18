@@ -20,3 +20,23 @@ class Client(models.Model):
 
     def __str__(self):
         return self.dba
+
+
+class UserType(models.Model):
+    name = models.CharField(max_length=20)
+
+    class Meta:
+        db_table = 'user_type'
+        indexes = [
+            models.Index(fields=['name'], name='usertype_name_idx')
+        ]
+    
+    def __str__(self):
+        return self.name
+
+
+# class Profile(models.Model):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE)
+#     user_type = models.ForeignKey(UserType, on_delete=models.CASCADE)
+
+

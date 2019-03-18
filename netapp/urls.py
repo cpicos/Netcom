@@ -4,11 +4,12 @@ from rest_framework.routers import DefaultRouter
 
 from .views import HomeTemplate, UsersTemplate, ClientsTemplate
 
-from .apiviews import LoginView, LogoutView, UserViewSet, ClientViewSet
+from .apiviews import LoginView, LogoutView, UserViewSet, ClientViewSet, UserPermViewSet
 
 router = DefaultRouter()
 router.register('api/users', UserViewSet, base_name='api/users')
 router.register('api/clients', ClientViewSet, base_name='api/clients')
+router.register('api/userperms', UserPermViewSet, base_name='api/userperms')
 
 urlpatterns = [
     path("", LoginView.as_view(), name="login"),

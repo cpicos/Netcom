@@ -1,5 +1,5 @@
-from django.contrib.auth.models import User, Permission
-from .models import Client
+from django.contrib.auth.models import Permission
+from .models import User1, Client
 
 from rest_framework import serializers
 
@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
     available_permissions = serializers.SerializerMethodField()
     
     class Meta:
-        model = User
+        model = User1
         fields = ('id', 'username', 'email', 'password', 'first_name', 'last_name', 'is_active', 'available_permissions')
         extra_kwargs = {
             'id': {'read_only': True},
@@ -21,7 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
             }
     
     def create(self, validated_data):
-        user = User(
+        user = User1(
             username = validated_data['username'],
             email = validated_data['email'],
             first_name = validated_data['first_name'],
@@ -33,11 +33,11 @@ class UserSerializer(serializers.ModelSerializer):
         return user
     
     def get_chosen_permissions(self, obj):
-        permissions = Permission.objects.filter(user=obj, content_type__app_label='netapp').values_list('id', flat=True)
+        permissions = Permission.objects.filter(user=obj, content_type__app_label__in=['netapp', 'auth']).exclude(content_type__id__in=(2, 3)).values_list('id', flat=True)
         return permissions
     
     def get_available_permissions(self, obj):
-        permissions = Permission.objects.filter(content_type__app_label='netapp').values('id', 'codename')
+        permissions = Permission.objects.filter(content_type__app_label__in=['netapp', 'auth']).exclude(content_type__id__in=(2, 3)).values('id', 'codename')
         chosen_permissions = self.get_chosen_permissions(obj)
         
         for perm in permissions:
@@ -86,17 +86,17 @@ class UserPermissionSerializer(serializers.ModelSerializer):
     available_permissions = serializers.SerializerMethodField()
 
     class Meta:
-        model = User
+        model = User1
         fields = ('id', 'available_permissions')
     
 
     def get_chosen_permissions(self, obj):
-        permissions = Permission.objects.filter(user=obj, content_type__app_label='netapp').values_list('id', flat=True)
+        permissions = Permission.objects.filter(user=obj, content_type__app_label__in=['netapp', 'auth']).exclude(content_type__id__in=(2, 3)).values_list('id', flat=True)
         return permissions
     
 
     def get_available_permissions(self, obj):
-        permissions = Permission.objects.filter(content_type__app_label='netapp').values('id', 'codename')
+        permissions = Permission.objects.filter(content_type__app_label__in=['netapp', 'auth']).exclude(content_type__id__in=(2, 3)).values('id', 'codename')
         chosen_permissions = self.get_chosen_permissions(obj)
         
         for perm in permissions:
@@ -111,7 +111,7 @@ class UserPermissionSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         user_id = request.POST.get('user_id')
         perm_id = request.POST.get('perm_id')
-        user = User.objects.get(id=user_id)
+        user = User1.objects.get(id=user_id)
         permission = Permission.objects.get(id=perm_id)
         user.user_permissions.add(permission)
         return user

@@ -12,6 +12,12 @@ class Client(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
+        permissions = (
+            ('can_add_client', 'can_add_client'),
+            ('can_change_client', 'can_change_client'),
+            ('can_delete_client', 'can_delete_client'),
+            ('can_view_client', 'can_view_client'),
+        )
         db_table = 'client'
         indexes = [
             models.Index(fields=['dba'], name='cl_dba_idx'),
@@ -33,6 +39,18 @@ class UserType(models.Model):
     
     def __str__(self):
         return self.name
+
+
+class User1(User):
+    # Extending auth user model without creating other table this is for adding permissions
+    class Meta:
+        proxy = True
+        permissions = (
+            ('can_add_user', 'can_add_user'),
+            ('can_change_user', 'can_change_user'),
+            ('can_delete_user', 'can_delete_user'),
+            ('can_view_user', 'can_view_user'),
+        )
 
 
 # class Profile(models.Model):

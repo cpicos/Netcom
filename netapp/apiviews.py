@@ -8,7 +8,7 @@ from rest_framework import generics, status, viewsets, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import Client
+from .models import User1, Client
 from .serializers import UserSerializer, ClientSerializer, UserPermissionSerializer
 
 
@@ -37,7 +37,7 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
-    permission_classes = ()
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, ):
         logout(request)
@@ -45,19 +45,19 @@ class LogoutView(APIView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
 
 class ClientViewSet(viewsets.ModelViewSet):
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
 
 
 class UserPermViewSet(viewsets.ModelViewSet):
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
     queryset = User.objects.all()
     serializer_class = UserPermissionSerializer
 

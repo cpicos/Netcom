@@ -18,6 +18,7 @@
                 <v-divider class="mx-2" inset vertical></v-divider>
                 <v-spacer></v-spacer>
 
+                {% if perms.auth.add_user %}
                 <v-dialog v-model="dialog" scrollable max-width="600px">
                     <template v-slot:activator="{ on }">
                         <!-- <v-btn color="primary" dark class="mb-2" v-on="on">+</v-btn> -->
@@ -77,6 +78,7 @@
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
+                {% endif %}
 
                 <v-dialog v-model="dialogEdit" scrollable max-width="600px">
                     <v-card>
@@ -125,12 +127,17 @@
 
                 <v-dialog v-model="dialogUserSettings" scrollable max-width="600px">
                     <v-card>
-                        <v-card-title><span class="headline">Configurar Usuario</span></v-card-title>
-                        <v-divider></v-divider>
+                        <v-toolbar color="black" dark>
+                            <v-toolbar-title>Configurar Usuario</v-toolbar-title>
+                            <v-text-field class="mx-3" flat label="Buscar Permiso" prepend-inner-icon="search"
+                                solo-inverted v-model="searchPerm" clearable @click:clear="clearSearchPerm">
+                            </v-text-field>
+                        </v-toolbar>
+
                         <v-card-text style="height: 400px;">
 
                             <v-list two-line>
-                                <template v-for="(perm, index) in editedItem.available_permissions">
+                                <template v-for="(perm, index) in filteredItems">
                                     <v-list-tile :key="perm.id" avatar ripple @click="changePerm(perm, editedItem)">
                                         <v-list-tile-content>
                                             <v-list-tile-title>[[ perm.codename ]]</v-list-tile-title>
@@ -168,9 +175,14 @@
                     <td class="text-xs-left">[[ props.item.last_name ]]</td>
                     <td class="text-xs-left">[[ props.item.is_active ]]</td>
                     <td class="justify-center layout px-0">
+                        {% if perms.auth.change_user %}
                         <v-icon small class="mr-2" @click="editUserSettings(props.item)">settings</v-icon>
                         <v-icon small class="mr-2" @click="editUser(props.item)">edit</v-icon>
+                        {% endif %}
+                        
+                        {% if perms.auth.delete_user %}
                         <v-icon small @click="deleteUser(props.item)">delete</v-icon>
+                        {% endif %}
                     </td>
                 </template>
             </v-data-table>
@@ -187,6 +199,7 @@
         data: {
             users: [],
             search: '',
+            searchPerm: '',
 
             headers: [
                 {
@@ -257,12 +270,26 @@
                 last_name: '',
                 id: '',
                 is_active: '',
-                available_permissions: ''
+                available_permissions: []
             },
-
-            /*TESTING*/
-            perms: []
         },
+
+        computed: {
+            filteredItems() {
+                return this.editedItem.available_permissions.filter(item => {
+                    if (!this.searchPerm){
+                        return this.editedItem.available_permissions;
+                    }
+                    else{
+                        return (item.codename.toLowerCase().includes(this.searchPerm.toLowerCase()) );
+                    }
+                });
+
+                console.log('filter info!');
+                return this.editedItem.available_permissions
+            }
+        },
+
         created: function () {
             this.getUsers();
         },
@@ -370,6 +397,9 @@
             },
 
             /*USER SETTINGS*/
+            clearSearchPerm() {
+                this.searchPerm = "";
+            },
 
             editUserSettings(item) {
                 this.editedIndex = this.users.indexOf(item)
@@ -389,7 +419,7 @@
                         this.snackbar_color = 'warning';
                         this.editedItem.available_permissions = response.data.available_permissions;
                         Object.assign(this.users[this.editedIndex], this.editedItem)
-                        
+
                     }).catch(error => {
                         this.snackbar = true;
                         this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Error al modificar permiso';
@@ -413,6 +443,7 @@
                 }
             }
         }
+    
     })
 </script>
 {% endblock vuescript %}

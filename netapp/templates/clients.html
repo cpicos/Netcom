@@ -16,6 +16,7 @@
                 <v-toolbar-title>Lista Clientes</v-toolbar-title>
                 <v-divider class="mx-2" inset vertical></v-divider>
                 <v-spacer></v-spacer>
+                {% if perms.netapp.add_client %}
                 <v-dialog v-model="dialog" scrollable max-width="600px">
                     <template v-slot:activator="{ on }">
                         <v-btn color="primary" dark class="mb-2" v-on="on">
@@ -66,6 +67,7 @@
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
+                {% endif %}
 
                 <v-dialog v-model="dialogEdit" scrollable max-width="600px">
                     <v-card>
@@ -124,8 +126,10 @@
                     <td class="text-xs-left">[[ props.item.dba ]]</td>
                     <td class="text-xs-left">[[ props.item.rfc ]]</td>
                     <td class="justify-center layout px-0">
+                        {% if perms.netapp.change_client %}
                         <v-icon small class="mr-2" @click="editClient(props.item)">edit</v-icon>
                         <v-icon small @click="deleteClient(props.item)">delete</v-icon>
+                        {% endif %}
                     </td>
                 </template>
             </v-data-table>

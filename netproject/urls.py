@@ -16,9 +16,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from netapp.urls import urlpatterns as netapp
+from rest_framework_swagger.views import get_swagger_view
+
+schema_view = get_swagger_view(title='Netcom API')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path(r'apidocs/', schema_view),
 ]
 
 urlpatterns += netapp

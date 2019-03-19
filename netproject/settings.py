@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
     'netapp',
     'rest_framework',
+    'rest_framework_swagger',
 ]
 
 MIDDLEWARE = [

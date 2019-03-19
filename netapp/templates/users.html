@@ -14,10 +14,6 @@
     <template>
         <div>
             <v-toolbar flat color="white">
-                <v-toolbar-title>Lista Usuarios</v-toolbar-title>
-                <v-divider class="mx-2" inset vertical></v-divider>
-                <v-spacer></v-spacer>
-
                 {% if perms.auth.add_user %}
                 <v-dialog v-model="dialog" scrollable max-width="600px">
                     <template v-slot:activator="{ on }">
@@ -80,6 +76,10 @@
                 </v-dialog>
                 {% endif %}
 
+                <v-toolbar-title>Lista Usuarios</v-toolbar-title>
+                <v-divider class="mx-2" inset vertical></v-divider>
+                <v-spacer></v-spacer>
+
                 <v-dialog v-model="dialogEdit" scrollable max-width="600px">
                     <v-card>
                         <v-card-title><span class="headline">Editar Usuario</span></v-card-title>
@@ -135,7 +135,6 @@
                         </v-toolbar>
 
                         <v-card-text style="height: 400px;">
-
                             <v-list two-line>
                                 <template v-for="(perm, index) in filteredItems">
                                     <v-list-tile :key="perm.id" avatar ripple @click="changePerm(perm, editedItem)">
@@ -159,11 +158,13 @@
                         <v-card-actions></v-card-actions>
                     </v-card>
                 </v-dialog>
-
             </v-toolbar>
             <v-toolbar flat color="white">
-                <v-text-field v-model="search" append-icon="search" label="Buscar" single-line hide-details>
-                </v-text-field>
+                <v-flex xs12 sm6 md4>
+                    <v-text-field v-model="search" prepend-inner-icon="search" label="Buscar" single-line hide-details
+                        clearable>
+                    </v-text-field>
+                </v-flex>
             </v-toolbar>
 
             <v-data-table :headers="headers" :items="users" :search="search" class="elevation-1">
@@ -179,7 +180,7 @@
                         <v-icon small class="mr-2" @click="editUserSettings(props.item)">settings</v-icon>
                         <v-icon small class="mr-2" @click="editUser(props.item)">edit</v-icon>
                         {% endif %}
-                        
+
                         {% if perms.auth.delete_user %}
                         <v-icon small @click="deleteUser(props.item)">delete</v-icon>
                         {% endif %}
@@ -277,11 +278,11 @@
         computed: {
             filteredItems() {
                 return this.editedItem.available_permissions.filter(item => {
-                    if (!this.searchPerm){
+                    if (!this.searchPerm) {
                         return this.editedItem.available_permissions;
                     }
-                    else{
-                        return (item.codename.toLowerCase().includes(this.searchPerm.toLowerCase()) );
+                    else {
+                        return (item.codename.toLowerCase().includes(this.searchPerm.toLowerCase()));
                     }
                 });
             }
@@ -441,7 +442,7 @@
                 }
             }
         }
-    
+
     })
 </script>
 {% endblock vuescript %}

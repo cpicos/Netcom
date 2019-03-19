@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'netapp',
     'rest_framework',
     'rest_framework_swagger',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -74,6 +75,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'netproject.wsgi.application'
 
+ASGI_APPLICATION = "netproject.routing.application"
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases

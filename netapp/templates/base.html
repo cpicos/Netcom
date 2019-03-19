@@ -84,6 +84,14 @@
         var urlClients = '/api/clients/';
         var urlUserPerms = '/api/userperms/';
     </script>
+    <script>
+        var roomName = 'testroom';
+        var appSocket = new WebSocket(
+            'ws://' + window.location.host +
+            '/ws/chat/' + roomName + '/');
+        
+        console.log(appSocket);
+    </script>
     {% endblock globalparams %}
 
     {% block vuescript %}

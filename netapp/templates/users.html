@@ -284,9 +284,6 @@
                         return (item.codename.toLowerCase().includes(this.searchPerm.toLowerCase()) );
                     }
                 });
-
-                console.log('filter info!');
-                return this.editedItem.available_permissions
             }
         },
 
@@ -333,7 +330,8 @@
                                 'email': response.data.email,
                                 'first_name': response.data.first_name,
                                 'last_name': response.data.last_name,
-                                'is_active': response.data.is_active
+                                'is_active': response.data.is_active,
+                                'available_permissions': response.data.available_permissions
                             })
 
                         this.resetForm();

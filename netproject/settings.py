@@ -76,9 +76,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'netproject.wsgi.application'
 
-ASGI_APPLICATION = "routing.application"
+# ASGI_APPLICATION = "routing.application"
 
-# ASGI_APPLICATION = "netproject.routing.application"
+ASGI_APPLICATION = "netproject.routing.application"
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases

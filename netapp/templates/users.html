@@ -336,6 +336,20 @@
                             })
 
                         this.resetForm();
+                        var message = "Usuario Agregado " + response.data.id;
+
+                        if(appSocket.readyState){
+                            appSocket.send(JSON.stringify({
+                                app_label : 'auth',
+                                model_name : 'User',
+                                instance : response.data.id,
+                                username : response.data.username,
+                                action_msg : 'CREATE'
+                            }));
+                        }
+                        else{
+                            alert('WebSocket No Se Pudo Conectar');
+                        }
                     }).catch(error => {
                         this.snackbar = true;
                         this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';

@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
-from .consumers import testConsumer
+from .consumers import UserConsumer
 
 websocket_urlpatterns = [
-    url(r'^ws/chat/(?P<room_name>[^/]+)/$', testConsumer),
+    url(r'^ws/api/users/$', UserConsumer),
 ]

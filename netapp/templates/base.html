@@ -52,6 +52,7 @@
     {% endblock navbar %}
 
     {% block container %}
+    <h1 id="txtMSG"></h1>
     {% block vueapp %}
     {% endblock vueapp %}
 
@@ -83,14 +84,28 @@
         var urlUsers = '/api/users/';
         var urlClients = '/api/clients/';
         var urlUserPerms = '/api/userperms/';
+        
+        /*URIS FOR SOCKETS*/
+        var host = window.location.host;
+        var wsUsers = 'ws://' + host +'/ws' + urlUsers;
+
     </script>
     <script>
-        var roomName = 'testroom';
-        var appSocket = new WebSocket(
-            'ws://' + window.location.host +
-            '/ws/chat/' + roomName + '/');
-        
-        console.log(appSocket);
+        var appSocket = new WebSocket(wsUsers);
+
+        appSocket.onmessage = function (e) {
+            var data = JSON.parse(e.data);
+            var message = data['message'];
+            console.log('ON MESSAGE');
+            console.log(message);
+            
+            $('#txtMSG').text(message.username += $('#txtMSG').text());
+        };
+
+        appSocket.onclose = function(e) {
+            console.error('socket closed unexpectedly');
+        };
+
     </script>
     {% endblock globalparams %}
 

@@ -8,7 +8,7 @@ from rest_framework import generics, status, viewsets, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import User1, Client
+from .models import Client
 from .serializers import UserSerializer, ClientSerializer, UserPermissionSerializer
 
 
@@ -46,7 +46,7 @@ class LogoutView(APIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
-    queryset = User1.objects.all()
+    queryset = User.objects.all()
     serializer_class = UserSerializer
 
 
@@ -58,7 +58,7 @@ class ClientViewSet(viewsets.ModelViewSet):
 
 class UserPermViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
-    queryset = User1.objects.all()
+    queryset = User.objects.all()
     serializer_class = UserPermissionSerializer
 
 
@@ -66,7 +66,7 @@ class UserPermViewSet(viewsets.ModelViewSet):
         request = self.request
         user_id = request.POST.get('user_id')
         perm_id = request.POST.get('perm_id')
-        user = User1.objects.get(id=user_id)
+        user = User.objects.get(id=user_id)
         permission = Permission.objects.get(id=perm_id)
         user.user_permissions.remove(permission)
         serializer = UserPermissionSerializer(user)

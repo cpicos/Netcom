@@ -401,6 +401,7 @@
             },
 
             editUserSettings(item) {
+                console.log(item);
                 this.editedIndex = this.users.indexOf(item)
                 this.editedItem = Object.assign({}, item)
                 this.dialogUserSettings = true

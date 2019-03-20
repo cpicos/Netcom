@@ -33,11 +33,13 @@ class UserSerializer(serializers.ModelSerializer):
         return user
     
     def get_chosen_permissions(self, obj):
-        permissions = Permission.objects.filter(user=obj, content_type__app_label__in=['netapp']).exclude(content_type__id__in=(2, 3)).values_list('id', flat=True)
+        permissions = Permission.objects.filter(user=obj, content_type__app_label__in=['netapp', 'auth'])
+        permissions = permissions.exclude(content_type__id__in=(2, 3, 9)).values_list('id', flat=True)
         return permissions
     
     def get_available_permissions(self, obj):
-        permissions = Permission.objects.filter(content_type__app_label__in=['netapp']).exclude(content_type__id__in=(2, 3)).values('id', 'codename')
+        permissions = Permission.objects.filter(content_type__app_label__in=['netapp', 'auth'])
+        permissions = permissions.exclude(content_type__id__in=(2, 3, 9)).values('id', 'codename')
         chosen_permissions = self.get_chosen_permissions(obj)
         
         for perm in permissions:
@@ -91,12 +93,14 @@ class UserPermissionSerializer(serializers.ModelSerializer):
     
 
     def get_chosen_permissions(self, obj):
-        permissions = Permission.objects.filter(user=obj, content_type__app_label__in=['netapp']).exclude(content_type__id__in=(2, 3)).values_list('id', flat=True)
+        permissions = Permission.objects.filter(user=obj, content_type__app_label__in=['netapp', 'auth'])
+        permissions = permissions.exclude(content_type__id__in=(2, 3, 9)).values_list('id', flat=True)
         return permissions
     
 
     def get_available_permissions(self, obj):
-        permissions = Permission.objects.filter(content_type__app_label__in=['netapp']).exclude(content_type__id__in=(2, 3)).values('id', 'codename')
+        permissions = Permission.objects.filter(content_type__app_label__in=['netapp', 'auth'])
+        permissions = permissions.exclude(content_type__id__in=(2, 3, 9)).values('id', 'codename')
         chosen_permissions = self.get_chosen_permissions(obj)
         
         for perm in permissions:

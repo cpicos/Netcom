@@ -36,11 +36,13 @@ class UserConsumer(AsyncWebsocketConsumer):
                 serializer = UserSerializer(instance)
                 message = JSONRenderer().render(serializer.data)
             else:
-                message = 'Usuario eliminado'
-                print('Usuario eliminado')
+                message = JSONRenderer().render({
+                    'id': instance,
+                    'username': username,
+                    'msg':'Usuario eliminado'
+                    })
         else:
-            message = 'ACCION NO PERMITIDA'
-            print('ACCION NO PERMITIDA')
+            message = JSONRenderer().render({'msg':'ACCION NO PERMITIDA'})
 
 
         # Send message to group

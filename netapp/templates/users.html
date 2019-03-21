@@ -359,6 +359,13 @@
                             this.snackbar_text = 'Usuario eliminado';
                             this.snackbar_color = 'success';
                             this.resetForm();
+                            response = {
+                                'data': {
+                                    'id': item.id,
+                                    'username': item.username
+                                }
+                            }
+                            this.OnSend(response, 'DELETE');
                         }).catch(error => {
                             this.snackbar = true;
                             this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
@@ -505,12 +512,18 @@
                         }
                     }
                     else if (action === "DELETE") {
-                        console.log('making delete');
+                        let inArray = this.idInArray(response.id, this.users)
+                        if(!inArray === false){
+                            console.log('remove from table');
+                            this.users.splice(inArray, 1);
+                            this.snackbar = true;
+                            this.snackbar_color = 'error';
+                            this.snackbar_text = response.msg + ' ' +response.username;
+                        }
                     }
                     else {
                         console.log('ACCION NO PERMITIDA');
                     }
-
                 };
             },
 

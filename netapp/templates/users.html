@@ -391,6 +391,7 @@
                     this.snackbar = true;
                     this.snackbar_text = 'Usuario actualizado';
                     this.snackbar_color = 'success';
+                    this.OnSend(response, 'UPDATE');
                 }).catch(error => {
                     this.snackbar = true;
                     this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
@@ -404,7 +405,6 @@
             },
 
             editUserSettings(item) {
-                console.log(item);
                 this.editedIndex = this.users.indexOf(item)
                 this.editedItem = Object.assign({}, item)
                 this.dialogUserSettings = true
@@ -422,14 +422,13 @@
                         this.snackbar_color = 'warning';
                         this.editedItem.available_permissions = response.data.available_permissions;
                         Object.assign(this.users[this.editedIndex], this.editedItem)
-
+                        response.data['username'] = this.editedItem.username;
+                        this.OnSend(response, 'UPDATE');
                     }).catch(error => {
                         this.snackbar = true;
                         this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Error al modificar permiso';
                         this.snackbar_color = 'error';
                     });
-
-
                 }
                 else {
                     axios.post(urlUserPerms, params).then(response => {
@@ -438,6 +437,8 @@
                         this.snackbar_color = 'success';
                         this.editedItem.available_permissions = response.data.available_permissions;
                         Object.assign(this.users[this.editedIndex], this.editedItem)
+                        response.data['username'] = this.editedItem.username;
+                        this.OnSend(response, 'UPDATE');
                     }).catch(error => {
                         this.snackbar = true;
                         this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Error al modificar permiso';
@@ -446,7 +447,7 @@
                 }
             },
 
-            
+
             /*USER SOCKET*/
             OnSend(response, action) {
                 if (appSocket.readyState) {
@@ -467,29 +468,56 @@
                 this.socket = appSocket;
                 this.socket.onmessage = ({ data }) => {
                     let response = JSON.parse(data)['message'];
+                    let action = JSON.parse(data)['action'];
                     response = JSON.parse(response);
+                    let inArray = this.idInArray(response.id, this.users);
 
-                    if (!this.idInArray(response.id, this.users)) {
-                        this.snackbar = true;
-                        this.snackbar_text = "Agregarón al usuario " + response.username;
-                        this.snackbar_color = 'info';
-                        this.users.push({
-                            'id': response.id,
-                            'username': response.username,
-                            'email': response.email,
-                            'first_name': response.first_name,
-                            'last_name': response.last_name,
-                            'is_active': response.is_active,
-                            'available_permissions': response.available_permissions
-                        });
+                    if (action === "CREATE" || action === "UPDATE") {
+                        if (inArray === false) {
+                            this.snackbar = true;
+                            this.snackbar_text = "Agregarón al usuario " + response.username;
+                            this.snackbar_color = 'info';
+                            this.users.push({
+                                'id': response.id,
+                                'username': response.username,
+                                'email': response.email,
+                                'first_name': response.first_name,
+                                'last_name': response.last_name,
+                                'is_active': response.is_active,
+                                'available_permissions': response.available_permissions
+                            });
+                        }
+                        else {
+                            if (action === "UPDATE") {
+                                this.snackbar = true;
+                                this.snackbar_text = "Actualizarón al usuario " + response.username;
+                                this.snackbar_color = 'info';
+                                Object.assign(this.users[inArray], {
+                                    'id': response.id,
+                                    'username': response.username,
+                                    'email': response.email,
+                                    'first_name': response.first_name,
+                                    'last_name': response.last_name,
+                                    'is_active': response.is_active,
+                                    'available_permissions': response.available_permissions
+                                });
+                            }
+                        }
                     }
+                    else if (action === "DELETE") {
+                        console.log('making delete');
+                    }
+                    else {
+                        console.log('ACCION NO PERMITIDA');
+                    }
+
                 };
             },
 
             idInArray: function (value, array) {
                 for (var i = 0; i < array.length; i++) {
                     if (array[i].id == value) {
-                        return true
+                        return i
                     }
                 }
                 return false

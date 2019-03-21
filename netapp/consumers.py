@@ -30,12 +30,16 @@ class UserConsumer(AsyncWebsocketConsumer):
         action_msg = text_data_json['action_msg']
 
         if action_msg in ACCEPTED_ACTIONS:
-            User = apps.get_model(app_label=app_label, model_name=model_name)
-            instance = User.objects.get(pk=instance, username=username)
-            serializer = UserSerializer(instance)
-            message = JSONRenderer().render(serializer.data)
+            if action_msg in ['CREATE', 'UPDATE']:
+                User = apps.get_model(app_label=app_label, model_name=model_name)
+                instance = User.objects.get(pk=instance, username=username)
+                serializer = UserSerializer(instance)
+                message = JSONRenderer().render(serializer.data)
+            else:
+                message = 'Usuario eliminado'
+                print('Usuario eliminado')
         else:
-            message = ''
+            message = 'ACCION NO PERMITIDA'
             print('ACCION NO PERMITIDA')
 
 
@@ -44,15 +48,18 @@ class UserConsumer(AsyncWebsocketConsumer):
             self.group_name,
             {
                 'type': 'user_message',
-                'message': message
+                'message': message,
+                'action': action_msg
             }
         )
 
     # Receive message from group
     async def user_message(self, event):
         message = event['message']
+        action = event['action']
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
-            'message': message.decode("utf-8")
+            'message': message.decode("utf-8"),
+            'action': action
         }))

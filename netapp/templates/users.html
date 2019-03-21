@@ -17,7 +17,6 @@
                 {% if perms.auth.add_user %}
                 <v-dialog v-model="dialog" scrollable max-width="600px">
                     <template v-slot:activator="{ on }">
-                        <!-- <v-btn color="primary" dark class="mb-2" v-on="on">+</v-btn> -->
                         <v-btn color="primary" dark class="mb-2" v-on="on">
                             <v-icon medium class="mr-2">add account_box
                             </v-icon>
@@ -290,6 +289,7 @@
 
         created: function () {
             this.getUsers();
+            this.OnMessage();
         },
 
         methods: {
@@ -337,19 +337,8 @@
 
                         this.resetForm();
                         var message = "Usuario Agregado " + response.data.id;
+                        this.OnSend(response, 'CREATE');
 
-                        if(appSocket.readyState){
-                            appSocket.send(JSON.stringify({
-                                app_label : 'auth',
-                                model_name : 'User',
-                                instance : response.data.id,
-                                username : response.data.username,
-                                action_msg : 'CREATE'
-                            }));
-                        }
-                        else{
-                            alert('WebSocket No Se Pudo Conectar');
-                        }
                     }).catch(error => {
                         this.snackbar = true;
                         this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
@@ -455,9 +444,53 @@
                         this.snackbar_color = 'error';
                     });
                 }
-            }
-        }
+            },
 
+            OnSend(response, action) {
+                if (appSocket.readyState) {
+                    appSocket.send(JSON.stringify({
+                        app_label: 'auth',
+                        model_name: 'User',
+                        instance: response.data.id,
+                        username: response.data.username,
+                        action_msg: action
+                    }));
+                }
+                else {
+                    alert('WebSocket No Se Pudo Conectar');
+                }
+            },
+
+            OnMessage() {
+                this.socket = appSocket;
+                this.socket.onmessage = ({ data }) => {
+                    let response = JSON.parse(data)['message'];
+                    response = JSON.parse(response);
+
+                    if (!this.idInArray(response.id, this.users)) {
+                        this.users.push({
+                            'id': response.id,
+                            'username': response.username,
+                            'email': response.email,
+                            'first_name': response.first_name,
+                            'last_name': response.last_name,
+                            'is_active': response.is_active,
+                            'available_permissions': response.available_permissions
+                        });
+                    }
+                };
+            },
+
+            idInArray: function (value, array) {
+                for (var i = 0; i < array.length; i++) {
+                    if (array[i].id == value) {
+                        return true
+                    }
+                }
+                return false
+            }
+
+        }
     })
 </script>
 {% endblock vuescript %}

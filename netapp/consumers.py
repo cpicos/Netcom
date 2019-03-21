@@ -2,6 +2,9 @@ from django.apps import apps
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import AsyncWebsocketConsumer # WebsocketConsumer
 import json
+from rest_framework.renderers import JSONRenderer
+
+from .serializers import UserSerializer
 
 class UserConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -28,11 +31,9 @@ class UserConsumer(AsyncWebsocketConsumer):
 
         if action_msg in ACCEPTED_ACTIONS:
             User = apps.get_model(app_label=app_label, model_name=model_name)
-            data = User.objects.get(pk=instance, username=username)
-            message = {
-                'id': data.id,
-                'username': data.username
-            }
+            instance = User.objects.get(pk=instance, username=username)
+            serializer = UserSerializer(instance)
+            message = JSONRenderer().render(serializer.data)
         else:
             message = ''
             print('ACCION NO PERMITIDA')
@@ -53,5 +54,5 @@ class UserConsumer(AsyncWebsocketConsumer):
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
-            'message': message
+            'message': message.decode("utf-8")
         }))

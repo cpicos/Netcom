@@ -446,6 +446,8 @@
                 }
             },
 
+            
+            /*USER SOCKET*/
             OnSend(response, action) {
                 if (appSocket.readyState) {
                     appSocket.send(JSON.stringify({
@@ -468,6 +470,9 @@
                     response = JSON.parse(response);
 
                     if (!this.idInArray(response.id, this.users)) {
+                        this.snackbar = true;
+                        this.snackbar_text = "Agregarón al usuario " + response.username;
+                        this.snackbar_color = 'info';
                         this.users.push({
                             'id': response.id,
                             'username': response.username,

@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'channels',
+    'django_eventstream',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django_grip.GripMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,6 +79,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'netproject.wsgi.application'
 
 ASGI_APPLICATION = "netproject.routing.application"
+
+EVENTSTREAM_STORAGE_CLASS = 'django_eventstream.storage.DjangoModelStorage'
 
 CHANNEL_LAYERS = {
     'default': {

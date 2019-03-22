@@ -289,7 +289,7 @@
 
         created: function () {
             this.getUsers();
-            this.OnMessage();
+            this.OnSSE();
         },
 
         methods: {
@@ -319,26 +319,6 @@
                     params.append('is_active', false);
 
                     axios.post(urlUsers, params).then(response => {
-                        this.dialog = false;
-                        this.snackbar = true;
-                        this.snackbar_text = 'Usuario creado : ' + response.data.username;
-                        this.snackbar_color = 'success';
-
-                        this.users.push(
-                            {
-                                'id': response.data.id,
-                                'username': response.data.username,
-                                'email': response.data.email,
-                                'first_name': response.data.first_name,
-                                'last_name': response.data.last_name,
-                                'is_active': response.data.is_active,
-                                'available_permissions': response.data.available_permissions
-                            })
-
-                        this.resetForm();
-                        var message = "Usuario Agregado " + response.data.id;
-                        this.OnSend(response, 'CREATE');
-
                     }).catch(error => {
                         this.snackbar = true;
                         this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
@@ -353,19 +333,6 @@
                 if (result) {
                     if (item != undefined) {
                         axios.delete(urlUsers + item.id + '/').then(response => {
-                            this.users.splice(index, 1);
-                            this.dialog = false;
-                            this.snackbar = true;
-                            this.snackbar_text = 'Usuario eliminado';
-                            this.snackbar_color = 'success';
-                            this.resetForm();
-                            response = {
-                                'data': {
-                                    'id': item.id,
-                                    'username': item.username
-                                }
-                            }
-                            this.OnSend(response, 'DELETE');
                         }).catch(error => {
                             this.snackbar = true;
                             this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
@@ -393,12 +360,6 @@
                 params.append('is_active', this.editedItem.is_active);
 
                 axios.patch(urlUsers + this.editedItem.id + '/', params).then(response => {
-                    Object.assign(this.users[this.editedIndex], this.editedItem)
-                    this.dialogEdit = false;
-                    this.snackbar = true;
-                    this.snackbar_text = 'Usuario actualizado';
-                    this.snackbar_color = 'success';
-                    this.OnSend(response, 'UPDATE');
                 }).catch(error => {
                     this.snackbar = true;
                     this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
@@ -424,13 +385,7 @@
 
                 if (perm.chosen) {
                     axios.patch(urlUserPerms + user.id + '/', params).then(response => {
-                        this.snackbar = true;
-                        this.snackbar_text = 'Permiso modificado : ' + perm.codename;
-                        this.snackbar_color = 'warning';
                         this.editedItem.available_permissions = response.data.available_permissions;
-                        Object.assign(this.users[this.editedIndex], this.editedItem)
-                        response.data['username'] = this.editedItem.username;
-                        this.OnSend(response, 'UPDATE');
                     }).catch(error => {
                         this.snackbar = true;
                         this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Error al modificar permiso';
@@ -439,13 +394,7 @@
                 }
                 else {
                     axios.post(urlUserPerms, params).then(response => {
-                        this.snackbar = true;
-                        this.snackbar_text = 'Permiso modificado : ' + perm.codename;
-                        this.snackbar_color = 'success';
                         this.editedItem.available_permissions = response.data.available_permissions;
-                        Object.assign(this.users[this.editedIndex], this.editedItem)
-                        response.data['username'] = this.editedItem.username;
-                        this.OnSend(response, 'UPDATE');
                     }).catch(error => {
                         this.snackbar = true;
                         this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Error al modificar permiso';
@@ -454,77 +403,49 @@
                 }
             },
 
+            OnSSE() {
+                var es = new ReconnectingEventSource('/events/');
+                this.sse = es;
 
-            /*USER SOCKET*/
-            OnSend(response, action) {
-                if (appSocket.readyState) {
-                    appSocket.send(JSON.stringify({
-                        app_label: 'auth',
-                        model_name: 'User',
-                        instance: response.data.id,
-                        username: response.data.username,
-                        action_msg: action
-                    }));
-                }
-                else {
-                    alert('WebSocket No Se Pudo Conectar');
-                }
-            },
+                this.sse.addEventListener('message', ({ data }) => {
+                    let json_data = JSON.parse(data);
+                    let notification = json_data.notification;
 
-            OnMessage() {
-                this.socket = appSocket;
-                this.socket.onmessage = ({ data }) => {
-                    let response = JSON.parse(data)['message'];
-                    let action = JSON.parse(data)['action'];
-                    response = JSON.parse(response);
-                    let inArray = this.idInArray(response.id, this.users);
+                    this.snackbar = true;
+                    this.snackbar_text = notification;
 
-                    if (action === "CREATE" || action === "UPDATE") {
-                        if (inArray === false) {
-                            this.snackbar = true;
-                            this.snackbar_text = "Agregarón al usuario " + response.username;
+                    if (json_data.data === "DELETE") {
+                        this.snackbar_color = 'warning';
+                        let inArray = this.idInArray(json_data.id, this.users);
+                        this.users.splice(inArray, 1);
+                    }
+                    else { /*CREATE AND UPDATE*/
+                        json_data = JSON.parse(json_data.data);
+                        let inArray = this.idInArray(json_data.id, this.users);
+
+                        if (inArray === false) { /*CREATE*/
+                            this.resetForm();
+                            this.dialog = false;
+                            this.snackbar_color = 'success';
+                            this.users.push(
+                                {
+                                    'id': json_data.id,
+                                    'username': json_data.username,
+                                    'email': json_data.email,
+                                    'first_name': json_data.first_name,
+                                    'last_name': json_data.last_name,
+                                    'is_active': json_data.is_active,
+                                    'available_permissions': json_data.available_permissions
+                                })
+                        }
+                        else { /*UPDATE*/
+                            Object.assign(this.users[inArray], json_data)
+                            this.dialogEdit = false;
                             this.snackbar_color = 'info';
-                            this.users.push({
-                                'id': response.id,
-                                'username': response.username,
-                                'email': response.email,
-                                'first_name': response.first_name,
-                                'last_name': response.last_name,
-                                'is_active': response.is_active,
-                                'available_permissions': response.available_permissions
-                            });
-                        }
-                        else {
-                            if (action === "UPDATE") {
-                                this.snackbar = true;
-                                this.snackbar_text = "Actualizarón al usuario " + response.username;
-                                this.snackbar_color = 'info';
-                                Object.assign(this.users[inArray], {
-                                    'id': response.id,
-                                    'username': response.username,
-                                    'email': response.email,
-                                    'first_name': response.first_name,
-                                    'last_name': response.last_name,
-                                    'is_active': response.is_active,
-                                    'available_permissions': response.available_permissions
-                                });
-                            }
                         }
                     }
-                    else if (action === "DELETE") {
-                        let inArray = this.idInArray(response.id, this.users)
-                        if(!inArray === false){
-                            console.log('remove from table');
-                            this.users.splice(inArray, 1);
-                            this.snackbar = true;
-                            this.snackbar_color = 'error';
-                            this.snackbar_text = response.msg + ' ' +response.username;
-                        }
-                    }
-                    else {
-                        console.log('ACCION NO PERMITIDA');
-                    }
-                };
+
+                }, false);
             },
 
             idInArray: function (value, array) {

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -69,6 +70,9 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.8/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+
+    <script src="{% static 'django_eventstream/eventsource.min.js' %}"></script>
+    <script src="{% static 'django_eventstream/reconnecting-eventsource.js' %}"></script>
     {% endblock cdns %}
     {% block globalparams %}
     <script>
@@ -85,28 +89,19 @@
         var urlUserPerms = '/api/userperms/';
 
         /*URIS FOR SOCKETS*/
-        var host = window.location.host;
-        var wsUsers = 'ws://' + host + '/ws' + urlUsers;
+        // var host = window.location.host;
+        // var wsUsers = 'ws://' + host + '/ws' + urlUsers;
 
     </script>
     
-    <script>
+    <!-- <script>
         var appSocket = new WebSocket(wsUsers);
-
-        // appSocket.onmessage = function (e) {
-        //     var data = JSON.parse(e.data);
-        //     var message = data['message'];
-        //     console.log('ON MESSAGE');
-        //     console.log(message);
-
-        //     console.log('HEY USERS TABLE!!');
-        // };
         appSocket.onclose = function (e) {
             console.error('socket closed unexpectedly');
         };
 
 
-    </script>
+    </script> -->
 
     {% endblock globalparams %}
 

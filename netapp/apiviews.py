@@ -7,6 +7,9 @@ from django.shortcuts import render_to_response, redirect
 from rest_framework import generics, status, viewsets, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.renderers import JSONRenderer
+
+from django_eventstream import send_event
 
 from .models import Client
 from .serializers import UserSerializer, ClientSerializer, UserPermissionSerializer
@@ -49,7 +52,32 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    def partial_update(self, request, *args, **kwargs):
+        # print(request)
+        response = super(UserViewSet, self).partial_update(request, *args, **kwargs)
+        user = self.get_object()
+        serializer = UserSerializer(user)
+        message = JSONRenderer().render(serializer.data)
+        send_event('test', 'message', {
+            'data': message.decode("utf-8"), 
+            'notification': 'Actialización usuario '  + user.username + ' modificado por ' + request.user.username
+            })
+        return response
+    
 
+    def destroy(self, request, *args, **kwargs):
+        print('HELLO MAKING DESTROY!!')
+        user = self.get_object()
+        username = user.username
+        send_event('test', 'message', {
+            'data': 'DELETE', 
+            'id': user.id,
+            'notification': 'Actialización usuario '  + username + ' modificado por ' + request.user.username
+            })
+        super(UserViewSet, self).destroy(request, *args, **kwargs)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+        
 class ClientViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
     queryset = Client.objects.all()
@@ -70,4 +98,9 @@ class UserPermViewSet(viewsets.ModelViewSet):
         permission = Permission.objects.get(id=perm_id)
         user.user_permissions.remove(permission)
         serializer = UserPermissionSerializer(user)
+        message = JSONRenderer().render(serializer.data)
+        send_event('test', 'message', {
+            'data': message.decode("utf-8"), 
+            'notification': 'Modificación Permisos usuario '  + user.username + ' modificado por ' + request.user.username
+            })
         return Response(serializer.data, status=status.HTTP_200_OK)

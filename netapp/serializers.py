@@ -1,7 +1,9 @@
 from django.contrib.auth.models import User, Permission
+from django_eventstream import send_event
 from .models import Client
 
 from rest_framework import serializers
+from rest_framework.renderers import JSONRenderer
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -17,10 +19,12 @@ class UserSerializer(serializers.ModelSerializer):
             'first_name': {'required': True},
             'last_name': {'required': True},
             'password': {'write_only': True, 'required': True},
-            'available_permissions': {'read_only': True}
+            'available_permissions': {'read_only': True},
+            'is_active': {'required': False}
             }
     
     def create(self, validated_data):
+        request = self.context.get("request")
         user = User(
             username = validated_data['username'],
             email = validated_data['email'],
@@ -30,6 +34,13 @@ class UserSerializer(serializers.ModelSerializer):
         )
         user.set_password(validated_data['password'])
         user.save()
+        serializer = UserSerializer(user)
+        message = JSONRenderer().render(serializer.data)
+
+        send_event('test', 'message', {
+            'data': message.decode("utf-8"), 
+            'notification': 'Nuevo usuario ' + user.username + ' creado por ' + request.user.username
+            })
         return user
     
     def get_chosen_permissions(self, obj):
@@ -118,4 +129,10 @@ class UserPermissionSerializer(serializers.ModelSerializer):
         user = User.objects.get(id=user_id)
         permission = Permission.objects.get(id=perm_id)
         user.user_permissions.add(permission)
+        serializer = UserSerializer(user)
+        message = JSONRenderer().render(serializer.data)
+        send_event('test', 'message', {
+            'data': message.decode("utf-8"), 
+            'notification': 'Modificación Permisos usuario '  + user.username + ' modificado por ' + request.user.username
+            })
         return user

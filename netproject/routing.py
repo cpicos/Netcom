@@ -5,9 +5,10 @@ import netapp.routing
 
 application = ProtocolTypeRouter({
     # (http->django views is added by default)
-    'websocket': AuthMiddlewareStack(
-        URLRouter(
-            netapp.routing.websocket_urlpatterns
-        )
-    ),
+    # 'websocket': AuthMiddlewareStack(
+    #     URLRouter(
+    #         netapp.routing.websocket_urlpatterns
+    #     )
+    # ),
+    'http': URLRouter(netapp.routing.events_urlpatterns),
 })

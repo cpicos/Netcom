@@ -29,10 +29,22 @@
                                     <v-container grid-list-md>
                                         <v-layout wrap>
                                             <v-flex xs11 sm11 md11>
+                                                <v-select v-model="event_type" :items="event_types" item-value="id"
+                                                    item-text="name" label="Tipo Evento">
+                                                    <template slot="item" slot-scope="data">
+                                                        <v-list-tile-content>
+                                                            <v-list-tile-title>
+                                                                [[ data.item.name ]]
+                                                            </v-list-tile-title>
+                                                        </v-list-tile-content>
+                                                    </template>
+                                                </v-select>
+                                            </v-flex>
+                                            <v-flex xs11 sm11 md11>
                                                 <v-autocomplete v-model="model" :items="clients" :loading="isLoading"
                                                     :search-input.sync="search" chips clearable hide-details
                                                     hide-selected item-text="dba" item-value="rfc"
-                                                    label="Buscar Clientes..." solo>
+                                                    label="Buscar Clientes...">
                                                     <template v-slot:no-data>
                                                         <v-list-tile>
                                                             <v-list-tile-title>
@@ -63,41 +75,55 @@
                                                 </v-autocomplete>
                                             </v-flex>
 
-                                            <v-flex xs11 sm5>
-                                                <v-dialog ref="StartHour" v-model="dialog_start_hour" :return-value.sync="start_time"
-                                                    persistent lazy full-width width="290px">
+                                            <v-flex xs11 sm6>
+                                                <v-dialog ref="StartHour" v-model="dialog_start_hour"
+                                                    :return-value.sync="start_time" persistent lazy full-width
+                                                    width="290px">
                                                     <template v-slot:activator="{ on }">
                                                         <v-text-field v-model="start_time" label="Hora inicio"
                                                             prepend-icon="access_time" readonly v-on="on">
                                                         </v-text-field>
                                                     </template>
-                                                    <v-time-picker v-if="dialog_start_hour" v-model="start_time" full-width>
+                                                    <v-time-picker v-if="dialog_start_hour" v-model="start_time"
+                                                        full-width>
                                                         <v-spacer></v-spacer>
-                                                        <v-btn flat color="primary" @click="dialog_start_hour = false">Cancel
+                                                        <v-btn flat color="primary" @click="dialog_start_hour = false">
+                                                            Cancel
                                                         </v-btn>
-                                                        <v-btn flat color="primary" @click="$refs.StartHour.save(start_time)">OK
+                                                        <v-btn flat color="primary"
+                                                            @click="$refs.StartHour.save(start_time)">OK
                                                         </v-btn>
                                                     </v-time-picker>
                                                 </v-dialog>
                                             </v-flex>
 
                                             <v-flex xs11 sm5>
-                                                    <v-dialog ref="EndHour" v-model="dialog_end_hour" :return-value.sync="end_time"
-                                                        persistent lazy full-width width="290px">
-                                                        <template v-slot:activator="{ on }">
-                                                            <v-text-field v-model="end_time" label="Hora fin"
-                                                                prepend-icon="access_time" readonly v-on="on">
-                                                            </v-text-field>
-                                                        </template>
-                                                        <v-time-picker v-if="dialog_end_hour" v-model="end_time" full-width>
-                                                            <v-spacer></v-spacer>
-                                                            <v-btn flat color="primary" @click="dialog_end_hour = false">Cancel
-                                                            </v-btn>
-                                                            <v-btn flat color="primary" @click="$refs.EndHour.save(end_time)">OK
-                                                            </v-btn>
-                                                        </v-time-picker>
-                                                    </v-dialog>
-                                                </v-flex>
+                                                <v-dialog ref="EndHour" v-model="dialog_end_hour"
+                                                    :return-value.sync="end_time" persistent lazy full-width
+                                                    width="290px">
+                                                    <template v-slot:activator="{ on }">
+                                                        <v-text-field v-model="end_time" label="Hora fin"
+                                                            prepend-icon="access_time" readonly v-on="on">
+                                                        </v-text-field>
+                                                    </template>
+                                                    <v-time-picker v-if="dialog_end_hour" v-model="end_time" full-width>
+                                                        <v-spacer></v-spacer>
+                                                        <v-btn flat color="primary" @click="dialog_end_hour = false">
+                                                            Cancel
+                                                        </v-btn>
+                                                        <v-btn flat color="primary"
+                                                            @click="$refs.EndHour.save(end_time)">OK
+                                                        </v-btn>
+                                                    </v-time-picker>
+                                                </v-dialog>
+                                            </v-flex>
+
+                                            <v-flex xs11 sm11 md11>
+                                                <v-textarea name="event_description" label="Descripción del evento"
+                                                    value=""
+                                                    hint=""
+                                                    rows="2"></v-textarea>
+                                            </v-flex>
 
                                             <!-- <v-flex xs11 sm5>
                                                     <v-dialog ref="dialog" v-model="dialog_end_hour" :return-value.sync="end_time"
@@ -209,6 +235,8 @@
             dialog_end_hour: false,
             valid: false,
             work_days: [],
+            event_types: [],
+            event_type: '',
 
             isLoading: false,
             clients: [],
@@ -225,6 +253,7 @@
         },
         mounted: function () {
             this.getCompanyHours();
+            this.getEventTypes();
         },
         watch: {
             search(val) {
@@ -258,13 +287,19 @@
                 }).finally(() => (this.isLoading = false));
             },
 
+            getEventTypes() {
+                axios.get(urlEventType).then(response => {
+                    console.log(response.data);
+                    this.event_types = response.data;
+                }).catch(err => {
+                    console.log(err);
+                })
+            },
+
             ShowDialogEvents() {
                 this.dialog_event = true;
             },
 
-            addValue: function (e) {
-                this.clients.push(e.target.value)
-            }
         }
     });
 </script>

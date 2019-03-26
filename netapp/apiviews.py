@@ -14,8 +14,9 @@ from datetime import timedelta
 
 from django_eventstream import send_event
 
-from .models import Client, CompanyHours
-from .serializers import UserSerializer, ClientSerializer, UserPermissionSerializer, CompanyHoursSerializer
+from .models import Client, CompanyHours, EventSubtype, EventType
+from .serializers import UserSerializer, ClientSerializer, UserPermissionSerializer, CompanyHoursSerializer, \
+    EventSubtypeSerializer, EventTypeSerializer
 
 
 class LoginView(APIView):
@@ -119,3 +120,15 @@ class CompanyHoursViewSet(viewsets.ModelViewSet):
         start = dt.datetime.strptime(start, "%Y-%m-%d").date()
         end = start + timedelta(days=6)
         return CompanyHours.objects.filter(date__range=[start, end])
+
+
+class EventSubtypeViewSet(viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+    queryset = EventSubtype.objects.all()
+    serializer_class = EventSubtypeSerializer
+
+
+class EventTypeViewSet(viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+    queryset = EventType.objects.all()
+    serializer_class = EventTypeSerializer

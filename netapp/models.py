@@ -52,6 +52,26 @@ class CompanyHours(models.Model):
         return self.date
 
 
+class EventSubtype(models.Model):
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = "event_subtype"
+    
+    def __str__(self):
+        return self.name
+
+
+class EventType(models.Model):
+    name = models.CharField(max_length=50)
+    subtype = models.ForeignKey(EventSubtype, null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "event_type"
+
+    def __str__(self):
+        return self.name + ' ' + self.subtype.name
+
 # class Profile(models.Model):
 #     user = models.OneToOneField(User, on_delete=models.CASCADE)
 #     user_type = models.ForeignKey(UserType, on_delete=models.CASCADE)

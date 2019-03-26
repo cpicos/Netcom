@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Permission
 from django_eventstream import send_event
-from .models import Client, CompanyHours
+from .models import Client, CompanyHours, EventSubtype, EventType
 
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
@@ -159,6 +159,7 @@ class CompanyHoursSerializer(serializers.ModelSerializer):
         time_span = 1
         start = obj.start_hour
 
+
         i = 0
         while i < duration:
             delta = dt.timedelta(hours = time_span)
@@ -168,3 +169,22 @@ class CompanyHoursSerializer(serializers.ModelSerializer):
             i += 1
 
         return result
+
+
+class EventSubtypeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = EventSubtype
+        fields = ('id', 'name')
+
+
+class EventTypeSerializer(serializers.ModelSerializer):
+    subtype = EventSubtypeSerializer(many=False)
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EventType
+        fields = ('id', 'name', 'subtype')
+    
+    def get_name(self, obj):
+        return obj.name + ' ' + obj.subtype.name

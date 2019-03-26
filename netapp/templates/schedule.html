@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block vueapp %}
+<v-app id="app">
+    <div>
+        <template>
+            <v-layout row wrap>
+                <v-flex xs12 sm6 md2 ma-4>
+                    <v-dialog ref="dialog" v-model="dialog_calendar" :return-value.sync="selected_date" persistent lazy
+                        full-width width="290px">
+                        <template v-slot:activator="{ on }">
+                            <v-text-field v-model="selected_date" label="Seleccionar fecha" prepend-icon="event"
+                                readonly v-on="on">
+                            </v-text-field>
+                        </template>
+                        <v-date-picker v-model="selected_date" scrollable>
+                            <v-spacer></v-spacer>
+                            <v-btn flat color="primary" @click="dialog_calendar = false">Cancel</v-btn>
+                            <v-btn flat color="primary" @click="getCompanyHours">OK</v-btn>
+                        </v-date-picker>
+                    </v-dialog>
+                    <v-dialog ref="dialog_event" v-model="dialog_event" scrollable max-width="600px">
+                        <v-card>
+                            <v-card-title><span class="headline">Agregar Evento</span></v-card-title>
+                            <v-divider></v-divider>
+                            <v-card-text style="height: 400px;">
+                                <v-form method="post" id="eventForm" v-model="valid" lazy-validation ref="form">
+                                    {% csrf_token %}
+                                    <v-container grid-list-md>
+                                        <v-layout wrap>
+                                            <v-flex xs11 sm11 md11>
+                                                <v-autocomplete v-model="model" :items="clients" :loading="isLoading"
+                                                    :search-input.sync="search" chips clearable hide-details
+                                                    hide-selected item-text="dba" item-value="rfc"
+                                                    label="Buscar Clientes..." solo>
+                                                    <template v-slot:no-data>
+                                                        <v-list-tile>
+                                                            <v-list-tile-title>
+                                                                Buscar
+                                                                <strong>Clientes</strong>
+                                                            </v-list-tile-title>
+                                                        </v-list-tile>
+                                                    </template>
+
+                                                    <template v-slot:selection="{ item, selected }">
+                                                        <v-chip :selected="selected" color="blue-grey"
+                                                            class="white--text">
+                                                            <span v-text="item.dba"></span>
+                                                        </v-chip>
+                                                    </template>
+
+                                                    <template v-slot:item="{ item }">
+                                                        <v-list-tile-avatar color="indigo"
+                                                            class="headline font-weight-light white--text">
+                                                            [[ item.dba.charAt(0) ]]
+                                                        </v-list-tile-avatar>
+                                                        <v-list-tile-content>
+                                                            <v-list-tile-title v-text="item.dba"></v-list-tile-title>
+                                                            <v-list-tile-sub-title v-text="item.rfc">
+                                                            </v-list-tile-sub-title>
+                                                        </v-list-tile-content>
+                                                    </template>
+                                                </v-autocomplete>
+                                            </v-flex>
+
+                                            <v-flex xs11 sm5>
+                                                <v-dialog ref="StartHour" v-model="dialog_start_hour" :return-value.sync="start_time"
+                                                    persistent lazy full-width width="290px">
+                                                    <template v-slot:activator="{ on }">
+                                                        <v-text-field v-model="start_time" label="Hora inicio"
+                                                            prepend-icon="access_time" readonly v-on="on">
+                                                        </v-text-field>
+                                                    </template>
+                                                    <v-time-picker v-if="dialog_start_hour" v-model="start_time" full-width>
+                                                        <v-spacer></v-spacer>
+                                                        <v-btn flat color="primary" @click="dialog_start_hour = false">Cancel
+                                                        </v-btn>
+                                                        <v-btn flat color="primary" @click="$refs.StartHour.save(start_time)">OK
+                                                        </v-btn>
+                                                    </v-time-picker>
+                                                </v-dialog>
+                                            </v-flex>
+
+                                            <v-flex xs11 sm5>
+                                                    <v-dialog ref="EndHour" v-model="dialog_end_hour" :return-value.sync="end_time"
+                                                        persistent lazy full-width width="290px">
+                                                        <template v-slot:activator="{ on }">
+                                                            <v-text-field v-model="end_time" label="Hora fin"
+                                                                prepend-icon="access_time" readonly v-on="on">
+                                                            </v-text-field>
+                                                        </template>
+                                                        <v-time-picker v-if="dialog_end_hour" v-model="end_time" full-width>
+                                                            <v-spacer></v-spacer>
+                                                            <v-btn flat color="primary" @click="dialog_end_hour = false">Cancel
+                                                            </v-btn>
+                                                            <v-btn flat color="primary" @click="$refs.EndHour.save(end_time)">OK
+                                                            </v-btn>
+                                                        </v-time-picker>
+                                                    </v-dialog>
+                                                </v-flex>
+
+                                            <!-- <v-flex xs11 sm5>
+                                                    <v-dialog ref="dialog" v-model="dialog_end_hour" :return-value.sync="end_time"
+                                                        persistent lazy full-width width="290px">
+                                                        <template v-slot:activator="{ on }">
+                                                            <v-text-field v-model="end_time" label="Hora fin"
+                                                                prepend-icon="access_time" readonly v-on="on">
+                                                            </v-text-field>
+                                                        </template>
+                                                        <v-time-picker v-if="dialog_end_hour" v-model="end_time" full-width>
+                                                            <v-spacer></v-spacer>
+                                                            <v-btn flat color="primary" @click="dialog_end_hour = false">Cancel
+                                                            </v-btn>
+                                                            <v-btn flat color="primary" @click="$refs.dialog.save(end_time)">OK
+                                                            </v-btn>
+                                                        </v-time-picker>
+                                                    </v-dialog>
+                                                </v-flex> -->
+
+                                            <!-- <v-flex xs12 sm6 md4>
+                                                <v-text-field name="password" v-model="password" :rules="passwordRules"
+                                                    label="Contraseña" type="password" required></v-text-field>
+                                            </v-flex>
+                                            <v-flex xs12 sm6 md4>
+                                                <v-text-field name="confirmpass" v-model="confirmpass"
+                                                    :rules="confirmpassRules" :error-messages='confirmPassword()'
+                                                    label="Confirmar Contraseña" type="password" required>
+                                                </v-text-field>
+                                            </v-flex>
+
+                                            <v-flex xs12>
+                                                <v-text-field name="email" v-model="email" :rules="emailRules"
+                                                    label="Correo" required></v-text-field>
+                                            </v-flex>
+
+                                            <v-flex xs12>
+                                                <v-text-field name="first_name" v-model="first_name"
+                                                    :rules="firstNameRules" label="Nombres" required></v-text-field>
+                                            </v-flex>
+                                            <v-flex xs12>
+                                                <v-text-field name="last_name" v-model="last_name"
+                                                    :rules="lastNameRules" label="Apellidos" required></v-text-field>
+                                            </v-flex> -->
+                                        </v-layout>
+                                    </v-container>
+                                </v-form>
+                            </v-card-text>
+                            <v-divider></v-divider>
+                            <v-card-actions></v-card-actions>
+                        </v-card>
+                    </v-dialog>
+                </v-flex>
+            </v-layout>
+        </template>
+
+        <template>
+            <v-container fluid grid-list-md>
+                <v-data-iterator :items="work_days" :rows-per-page-items="rowsPerPageItems"
+                    :pagination.sync="pagination" content-tag="v-layout" row wrap>
+                    <template v-slot:item="props">
+                        <v-flex xs12 sm6 md4 lg3>
+                            <v-card>
+                                <v-card-title>
+                                    <!-- <h4>[[ props.item.date ]]</h4> -->
+                                    <v-btn color="blue darken-1" flat @click="ShowDialogEvents">[[ props.item.date ]]
+                                    </v-btn>
+                                </v-card-title>
+                                <v-divider></v-divider>
+
+                                <v-list dense>
+                                    <v-list-tile v-for="s in props.item.slots" :key="s.start">
+                                        <v-list-tile-content>
+                                            [[ s.start ]] - [[ s.end ]]
+                                            <!-- <v-btn color="blue darken-1" flat @click="ShowDialogEvents">[[ s.start ]] - [[ s.end ]]</v-btn> -->
+                                        </v-list-tile-content>
+
+                                        <!-- <v-list-tile-content>
+                                            <v-btn>Eventos</v-btn>
+                                        </v-list-tile-content>
+                                        <v-list-tile-content>
+                                            <v-btn>Eventos</v-btn>
+                                        </v-list-tile-content>
+                                        <v-list-tile-content>
+                                            <v-btn>Eventos</v-btn>
+                                        </v-list-tile-content> -->
+
+                                    </v-list-tile>
+                                </v-list>
+                            </v-card>
+                        </v-flex>
+                    </template>
+                </v-data-iterator>
+            </v-container>
+        </template>
+    </div>
+</v-app>
+{% endblock vueapp %}
+
+{% block vuescript %}
+<script>
+    var app = new Vue({
+        delimiters: ['[[', ']]'],
+        el: '#app',
+        data: {
+            selected_date: new Date().toISOString().substr(0, 10),
+            dialog_calendar: false,
+            dialog_event: false,
+            dialog_start_hour: false,
+            dialog_end_hour: false,
+            valid: false,
+            work_days: [],
+
+            isLoading: false,
+            clients: [],
+            model: null,
+            search: null,
+
+            start_time: null,
+            end_time: null,
+
+            rowsPerPageItems: [4, 8, 12],
+            pagination: {
+                rowsPerPage: 7
+            }
+        },
+        mounted: function () {
+            this.getCompanyHours();
+        },
+        watch: {
+            search(val) {
+                // Items have already been loaded
+                if (this.clients.length > 0) return
+                this.isLoading = true
+                this.getClients();
+            }
+        },
+
+        methods: {
+            getCompanyHours() {
+                this.$refs.dialog.save(this.selected_date);
+                var params = {
+                    start_date: this.selected_date
+                }
+                axios.get(urlSchedule, { params }).then(response => {
+                    this.work_days = response.data;
+                }).catch(error => {
+                    this.snackbar = true;
+                    this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText;
+                    this.snackbar_color = 'error';
+                });
+            },
+
+            getClients() {
+                axios.get(urlClients).then(response => {
+                    this.clients = response.data;
+                }).catch(err => {
+                    console.log(err);
+                }).finally(() => (this.isLoading = false));
+            },
+
+            ShowDialogEvents() {
+                this.dialog_event = true;
+            },
+
+            addValue: function (e) {
+                this.clients.push(e.target.value)
+            }
+        }
+    });
+</script>
+{% endblock vuescript %}

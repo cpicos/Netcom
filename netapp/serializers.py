@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Permission
 from django_eventstream import send_event
-from .models import Client, CompanyHours, EventSubtype, EventType
+from .models import Client, CompanyHours, EventSubtype, EventType, Event
 
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
@@ -153,21 +153,26 @@ class CompanyHoursSerializer(serializers.ModelSerializer):
             'end_hour': {'required': True}
         }
     
+    def get_events(self, obj):
+        events = Event.objects.filter(date=obj.date)
+        return events
+    
     def get_slots(self, obj):
         result = []
         duration = obj.end_hour.hour - obj.start_hour.hour
         time_span = 1
         start = obj.start_hour
-
+        events = self.get_events(obj)
 
         i = 0
         while i < duration:
             delta = dt.timedelta(hours = time_span)
             end = (dt.datetime.combine(dt.date(1,1,1), start) + delta).time()
-            result.append({'start': start, 'end': end})
+            in_slot = events.filter(start_hour__lte=start, end_hour__gte=end)
+            serializer = EventSerializer(in_slot, many=True)
+            result.append({'start': start, 'end': end, 'events': serializer.data })
             start = end
             i += 1
-
         return result
 
 
@@ -188,3 +193,23 @@ class EventTypeSerializer(serializers.ModelSerializer):
     
     def get_name(self, obj):
         return obj.name + ' ' + obj.subtype.name
+
+
+class EventSerializer(serializers.ModelSerializer):
+    event_type = EventTypeSerializer(many=False)
+    client = ClientSerializer(many=False)
+    employees = UserSerializer(many=True)
+    created_by = UserSerializer(many=False)
+    responsible_list = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Event
+        fields = ('id', 'event_type', 'client', 'date', 'start_hour', 'end_hour', 'description', 'employees', 'created_at', 'created_by', 
+                'responsible_list')
+    
+
+    def get_responsible_list(self, obj):
+        data = obj.employees.all().values_list('username', flat=True)
+        result = ','.join(str(e) for e in data)
+        return result
+        

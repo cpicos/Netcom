@@ -33,6 +33,9 @@
                 <li class="nav-item {% if request.resolver_match.url_name == 'clients'%} active {% endif %}">
                     <a class="nav-link" href="/clients/">Clientes <span class="sr-only">(current)</span></a>
                 </li>
+                <li class="nav-item {% if request.resolver_match.url_name == 'schedule'%} active {% endif %}">
+                    <a class="nav-link" href="/schedule/">Agenda <span class="sr-only">(current)</span></a>
+                </li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">
@@ -87,6 +90,7 @@
         var urlUsers = '/api/users/';
         var urlClients = '/api/clients/';
         var urlUserPerms = '/api/userperms/';
+        var urlSchedule = '/api/schedule/';
 
         /*URIS FOR SOCKETS*/
         // var host = window.location.host;

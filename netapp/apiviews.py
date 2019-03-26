@@ -9,10 +9,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 
+import datetime as dt
+from datetime import timedelta 
+
 from django_eventstream import send_event
 
-from .models import Client
-from .serializers import UserSerializer, ClientSerializer, UserPermissionSerializer
+from .models import Client, CompanyHours
+from .serializers import UserSerializer, ClientSerializer, UserPermissionSerializer, CompanyHoursSerializer
 
 
 class LoginView(APIView):
@@ -104,3 +107,15 @@ class UserPermViewSet(viewsets.ModelViewSet):
             'notification': 'Modificación Permisos usuario '  + user.username + ' modificado por ' + request.user.username
             })
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CompanyHoursViewSet(viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+    queryset = CompanyHours.objects.all()
+    serializer_class = CompanyHoursSerializer
+
+    def get_queryset(self):
+        start = self.request.GET.get('start_date')
+        start = dt.datetime.strptime(start, "%Y-%m-%d").date()
+        end = start + timedelta(days=6)
+        return CompanyHours.objects.filter(date__range=[start, end])

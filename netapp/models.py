@@ -34,6 +34,24 @@ class UserType(models.Model):
     def __str__(self):
         return self.name
 
+
+class CompanyHours(models.Model):
+    date = models.DateField()
+    start_hour = models.TimeField()
+    end_hour = models.TimeField()
+
+    class Meta:
+        db_table = "company_hours"
+        indexes = [
+            models.Index(fields=['date'], name='company_hours_date_idx'),
+            models.Index(fields=['start_hour'], name='company_hours_start_hour_idx'),
+            models.Index(fields=['end_hour'], name='company_hours_end_hour_idx'),
+        ]
+    
+    def __str__(self):
+        return self.date
+
+
 # class Profile(models.Model):
 #     user = models.OneToOneField(User, on_delete=models.CASCADE)
 #     user_type = models.ForeignKey(UserType, on_delete=models.CASCADE)

@@ -13,7 +13,11 @@ class HomeTemplate(TemplateView):
 class UsersTemplate(TemplateView):
     template_name = "users.html"
 
-
 @method_decorator(login_required, name='dispatch')
 class ClientsTemplate(TemplateView):
     template_name = "clients.html"
+
+
+@method_decorator(login_required, name='dispatch')
+class ScheduleTemplate(TemplateView):
+    template_name = "schedule.html"

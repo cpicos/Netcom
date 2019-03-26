@@ -1,9 +1,11 @@
 from django.contrib.auth.models import User, Permission
 from django_eventstream import send_event
-from .models import Client
+from .models import Client, CompanyHours
 
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
+
+import datetime as dt
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -136,3 +138,33 @@ class UserPermissionSerializer(serializers.ModelSerializer):
             'notification': 'Modificación Permisos usuario '  + user.username + ' modificado por ' + request.user.username
             })
         return user
+
+
+class CompanyHoursSerializer(serializers.ModelSerializer):
+    slots = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CompanyHours
+        fields = ('id', 'date', 'start_hour', 'end_hour', 'slots')
+        extra_kwargs = {
+            'id': {'read_only': True},
+            'date': {'required': True},
+            'start_hour': {'required': True},
+            'end_hour': {'required': True}
+        }
+    
+    def get_slots(self, obj):
+        result = []
+        duration = obj.end_hour.hour - obj.start_hour.hour
+        time_span = 1
+        start = obj.start_hour
+
+        i = 0
+        while i < duration:
+            delta = dt.timedelta(hours = time_span)
+            end = (dt.datetime.combine(dt.date(1,1,1), start) + delta).time()
+            result.append({'start': start, 'end': end})
+            start = end
+            i += 1
+
+        return result

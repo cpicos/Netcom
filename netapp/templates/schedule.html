@@ -29,7 +29,7 @@
                                     <v-container grid-list-md>
                                         <v-layout wrap>
                                             <v-flex xs11 sm11 md11>
-                                                <v-select v-model="event_type" :items="event_types" item-value="id"
+                                                <v-select ref="event_type" name="event_type" v-model="event_type" :items="event_types" item-value="id"
                                                     item-text="name" label="Tipo Evento" :rules="requiredRule" required autofocus>
                                                     <template slot="item" slot-scope="data">
                                                         <v-list-tile-content>
@@ -41,7 +41,7 @@
                                                 </v-select>
                                             </v-flex>
                                             <v-flex xs11 sm11 md11>
-                                                <v-autocomplete v-model="client" :items="clients" :loading="isLoading"
+                                                <v-autocomplete name="client" v-model="client" :items="clients" :loading="isLoading"
                                                     :search-input.sync="search" chips clearable hide-details
                                                     hide-selected item-text="dba" item-value="id"
                                                     label="Buscar Clientes..." :rules="requiredRule" required>
@@ -79,11 +79,13 @@
                                                 <v-dialog ref="StartHour" v-model="dialog_start_hour"
                                                     :return-value.sync="start_time" persistent lazy full-width
                                                     width="290px">
+                                                    
                                                     <template v-slot:activator="{ on }">
-                                                        <v-text-field v-model="start_time" label="Hora inicio"
+                                                        <v-text-field name="start_time" v-model="start_time" label="Hora inicio"
                                                             prepend-icon="access_time" readonly v-on="on" :rules="requiredRule" required>
                                                         </v-text-field>
                                                     </template>
+
                                                     <v-time-picker v-if="dialog_start_hour" v-model="start_time"
                                                         full-width>
                                                         <v-spacer></v-spacer>
@@ -102,7 +104,7 @@
                                                     :return-value.sync="end_time" persistent lazy full-width
                                                     width="290px">
                                                     <template v-slot:activator="{ on }">
-                                                        <v-text-field v-model="end_time" label="Hora fin"
+                                                        <v-text-field name="end_time" v-model="end_time" label="Hora fin"
                                                             prepend-icon="access_time" readonly v-on="on" :rules="requiredRule" required>
                                                         </v-text-field>
                                                     </template>
@@ -119,12 +121,12 @@
                                             </v-flex>
 
                                             <v-flex xs11 sm11 md11>
-                                                <v-textarea v-model="event_description" label="Descripción del evento"
+                                                <v-textarea name="event_description" v-model="event_description" label="Descripción del evento"
                                                     value="" hint="" rows="2" required :rules="requiredRule"></v-textarea>
                                             </v-flex>
 
                                             <v-flex xs11 sm11 md11>
-                                                    <v-autocomplete v-model="user" :items="users" :loading="isLoading"
+                                                    <v-autocomplete name="user" v-model="user" :items="users" :loading="isLoading"
                                                         :search-input.sync="searchUsers" chips multiple clearable hide-details
                                                         hide-selected item-text="username" item-value="id"
                                                         label="Buscar Empleados..." :rules="requiredRule" required>
@@ -184,7 +186,7 @@
                             <v-card>
                                 <v-card-title>
                                     <!-- <h4>[[ props.item.date ]]</h4> -->
-                                    <v-btn color="blue darken-1" flat @click="ShowDialogEvents">[[ props.item.date ]]
+                                    <v-btn color="blue darken-1" flat @click="ShowDialogEvents(props.item.date)">[[ props.item.date ]]
                                     </v-btn>
                                 </v-card-title>
                                 <v-divider></v-divider>
@@ -230,6 +232,7 @@
             users: [],
             user: null,
             event_description: null,
+            event_date: null,
 
             requiredRule: [
                 (v) => !!v || 'Campo requerido',
@@ -270,6 +273,11 @@
         },
 
         methods: {
+            resetForm() {
+                this.$refs.form.reset();
+                this.$refs.event_type.focus();
+            },
+
             getCompanyHours() {
                 this.$refs.dialog.save(this.selected_date);
                 var params = {
@@ -308,47 +316,53 @@
                 }).finally(() => (this.isLoading = false));
             },
 
-            ShowDialogEvents() {
+            ShowDialogEvents(event_date) {
+                this.event_date = event_date;
                 this.dialog_event = true;
             },
             saveEvent(){
                 if (this.valid) {
-                    console.log('get parameters for save!');
+                    const params = new URLSearchParams();
                     console.log(this.event_type);
-                    console.log(this.client);
-                    console.log(this.start_time);
-                    console.log(this.end_time);
-                    console.log(this.event_description);
-                    console.log(this.user);
-                    // const params = new URLSearchParams();
-                    // params.append('name', this.name);
-                    // params.append('dba', this.dba);
-                    // params.append('rfc', this.rfc);
-                    // params.append('address', this.address);
-                    // params.append('postal_code', this.postal_code);
+                    params.append('event_type', this.event_type);
+                    params.append('client', this.client);
+                    params.append('date', this.event_date);
+                    params.append('start_hour', this.start_time);
+                    params.append('end_hour', this.end_time);
+                    params.append('description', this.event_description);
+                    params.append('employees', this.user);
 
-                    // axios.post(urlClients, params).then(response => {
-                    //     this.dialog = false;
-                    //     this.snackbar = true;
-                    //     this.snackbar_text = 'Cliente creado : ' + response.data.dba;
-                    //     this.snackbar_color = 'success';
+                    axios.post(urlEvents, params).then(response => {
+                        this.dialog_event = false;
+                        this.resetForm();
+                        this.getCompanyHours();
 
-                    //     this.clients.push(
-                    //         {
-                    //             'id': response.data.id,
-                    //             'name': response.data.name,
-                    //             'dba': response.data.dba,
-                    //             'rfc': response.data.rfc,
-                    //             'postal_code': response.data.postal_code,
-                    //             'address': response.data.address
-                    //         })
 
-                    //     this.resetForm();
-                    // }).catch(error => {
-                    //     this.snackbar = true;
-                    //     this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error al crear cliente';
-                    //     this.snackbar_color = 'error';
-                    // });
+                        // console.log(this.work_days);
+
+                        // console.log(response.data);
+                        // this.dialog = false;
+                        // this.snackbar = true;
+                        // this.snackbar_text = 'Cliente creado : ' + response.data.dba;
+                        // this.snackbar_color = 'success';
+
+                        // this.clients.push(
+                        //     {
+                        //         'id': response.data.id,
+                        //         'name': response.data.name,
+                        //         'dba': response.data.dba,
+                        //         'rfc': response.data.rfc,
+                        //         'postal_code': response.data.postal_code,
+                        //         'address': response.data.address
+                        //     })
+
+                        // this.resetForm();
+                    }).catch(error => {
+                        console.log(error);
+                        // this.snackbar = true;
+                        // this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error al crear cliente';
+                        // this.snackbar_color = 'error';
+                    });
                 }
             }
         }

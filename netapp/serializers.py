@@ -168,8 +168,12 @@ class CompanyHoursSerializer(serializers.ModelSerializer):
         while i < duration:
             delta = dt.timedelta(hours = time_span)
             end = (dt.datetime.combine(dt.date(1,1,1), start) + delta).time()
-            in_slot = events.filter(start_hour__lte=start, end_hour__gte=end)
-            serializer = EventSerializer(in_slot, many=True)
+            
+            in_single_slot = events.filter(start_hour__gt=start, end_hour__lt=end)
+            start_in_slot = events.filter(start_hour__lt=end, end_hour__gt=start).exclude(id__in=in_single_slot.values_list('id', flat=True))
+            events_in_slots = in_single_slot | start_in_slot
+            
+            serializer = EventReadSerializer(events_in_slots, many=True)
             result.append({'start': start, 'end': end, 'events': serializer.data })
             start = end
             i += 1
@@ -196,20 +200,60 @@ class EventTypeSerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
-    event_type = EventTypeSerializer(many=False)
-    client = ClientSerializer(many=False)
-    employees = UserSerializer(many=True)
-    created_by = UserSerializer(many=False)
     responsible_list = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
-        fields = ('id', 'event_type', 'client', 'date', 'start_hour', 'end_hour', 'description', 'employees', 'created_at', 'created_by', 
-                'responsible_list')
+        fields = ('id', 'date', 'start_hour', 'end_hour', 'description', 'created_at', 'created_by', 'responsible_list', 'event_type', 
+                  'client', )
+        extra_kwargs = {
+            'id': {'read_only': True},
+            'event_type': {'required': True},
+            'client': {'required': True},
+            'date': {'required': True},
+            'start_hour': {'required': True},
+            'end_hour': {'required': True},
+            'description': {'required': True},
+            'created_at': {'read_only': True},
+            'created_by': {'read_only': True},
+            'responsible_list': {'read_only': True}
+        }
     
+
+    def create(self, validated_data):
+        user = None
+        request = self.context.get("request")
+        employees = request.POST.get('employees', None)
+        employees = employees.split(',')
+        if request and hasattr(request, "user"):
+            user = request.user
+        event = Event(
+            event_type = validated_data['event_type'],
+            client = validated_data['client'],
+            date = validated_data['date'], 
+            start_hour = validated_data['start_hour'],
+            end_hour = validated_data['end_hour'],
+            description = validated_data['description'],
+            created_by = user
+        )
+        event.save()
+        for employee in employees:
+            event.employees.add(int(employee))
+        return event
 
     def get_responsible_list(self, obj):
         data = obj.employees.all().values_list('username', flat=True)
         result = ','.join(str(e) for e in data)
         return result
-        
+
+
+class EventReadSerializer(EventSerializer):
+    event_type = EventTypeSerializer(many=False, read_only=True)
+    client = ClientSerializer(many=False, read_only=True)
+    employees = UserSerializer(many=True, read_only=True)
+    created_by = UserSerializer(many=False, read_only=True)
+
+    class Meta:
+        model = Event
+        fields = ('id', 'date', 'start_hour', 'end_hour', 'description', 'created_at', 'created_by', 'responsible_list', 'event_type', 
+                  'client', 'employees', )

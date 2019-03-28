@@ -19,6 +19,7 @@
                             <v-btn flat color="primary" @click="getCompanyHours">OK</v-btn>
                         </v-date-picker>
                     </v-dialog>
+
                     <v-dialog ref="dialog_event" v-model="dialog_event" scrollable max-width="600px">
                         <v-card>
                             <v-card-title><span class="headline">Agregar Evento</span></v-card-title>
@@ -29,8 +30,9 @@
                                     <v-container grid-list-md>
                                         <v-layout wrap>
                                             <v-flex xs11 sm11 md11>
-                                                <v-select ref="event_type" name="event_type" v-model="event_type" :items="event_types" item-value="id"
-                                                    item-text="name" label="Tipo Evento" :rules="requiredRule" required autofocus>
+                                                <v-select ref="event_type" name="event_type" v-model="event_type"
+                                                    :items="event_types" item-value="id" item-text="name"
+                                                    label="Tipo Evento" :rules="requiredRule" required autofocus>
                                                     <template slot="item" slot-scope="data">
                                                         <v-list-tile-content>
                                                             <v-list-tile-title>
@@ -41,9 +43,9 @@
                                                 </v-select>
                                             </v-flex>
                                             <v-flex xs11 sm11 md11>
-                                                <v-autocomplete name="client" v-model="client" :items="clients" :loading="isLoading"
-                                                    :search-input.sync="search" chips clearable hide-details
-                                                    hide-selected item-text="dba" item-value="id"
+                                                <v-autocomplete name="client" v-model="client" :items="clients"
+                                                    :loading="isLoading" :search-input.sync="search" chips clearable
+                                                    hide-details hide-selected item-text="dba" item-value="id"
                                                     label="Buscar Clientes..." :rules="requiredRule" required>
                                                     <template v-slot:no-data>
                                                         <v-list-tile>
@@ -79,10 +81,11 @@
                                                 <v-dialog ref="StartHour" v-model="dialog_start_hour"
                                                     :return-value.sync="start_time" persistent lazy full-width
                                                     width="290px">
-                                                    
+
                                                     <template v-slot:activator="{ on }">
-                                                        <v-text-field name="start_time" v-model="start_time" label="Hora inicio"
-                                                            prepend-icon="access_time" readonly v-on="on" :rules="requiredRule" required>
+                                                        <v-text-field name="start_time" v-model="start_time"
+                                                            label="Hora inicio" prepend-icon="access_time" readonly
+                                                            v-on="on" :rules="requiredRule" required>
                                                         </v-text-field>
                                                     </template>
 
@@ -104,8 +107,9 @@
                                                     :return-value.sync="end_time" persistent lazy full-width
                                                     width="290px">
                                                     <template v-slot:activator="{ on }">
-                                                        <v-text-field name="end_time" v-model="end_time" label="Hora fin"
-                                                            prepend-icon="access_time" readonly v-on="on" :rules="requiredRule" required>
+                                                        <v-text-field name="end_time" v-model="end_time"
+                                                            label="Hora fin" prepend-icon="access_time" readonly
+                                                            v-on="on" :rules="requiredRule" required>
                                                         </v-text-field>
                                                     </template>
                                                     <v-time-picker v-if="dialog_end_hour" v-model="end_time" full-width>
@@ -121,15 +125,179 @@
                                             </v-flex>
 
                                             <v-flex xs11 sm11 md11>
-                                                <v-textarea name="event_description" v-model="event_description" label="Descripción del evento"
-                                                    value="" hint="" rows="2" required :rules="requiredRule"></v-textarea>
+                                                <v-textarea name="event_description" v-model="event_description"
+                                                    label="Descripción del evento" value="" hint="" rows="2" required
+                                                    :rules="requiredRule"></v-textarea>
                                             </v-flex>
 
                                             <v-flex xs11 sm11 md11>
-                                                    <v-autocomplete name="user" v-model="user" :items="users" :loading="isLoading"
-                                                        :search-input.sync="searchUsers" chips multiple clearable hide-details
-                                                        hide-selected item-text="username" item-value="id"
-                                                        label="Buscar Empleados..." :rules="requiredRule" required>
+                                                <v-autocomplete name="user" v-model="user" :items="users"
+                                                    :loading="isLoading" :search-input.sync="searchUsers" chips multiple
+                                                    clearable hide-details hide-selected item-text="username"
+                                                    item-value="id" label="Buscar Empleados..." :rules="requiredRule"
+                                                    required>
+                                                    <template v-slot:no-data>
+                                                        <v-list-tile>
+                                                            <v-list-tile-title>
+                                                                Buscar
+                                                                <strong>Empleados</strong>
+                                                            </v-list-tile-title>
+                                                        </v-list-tile>
+                                                    </template>
+
+                                                    <template v-slot:selection="{ item, selected }">
+                                                        <v-chip :selected="selected" color="blue-grey"
+                                                            class="white--text">
+                                                            <span v-text="item.username"></span>
+                                                        </v-chip>
+                                                    </template>
+
+                                                    <template v-slot:item="{ item }">
+                                                        <v-list-tile-avatar color="indigo"
+                                                            class="headline font-weight-light white--text">
+                                                            [[ item.username.charAt(0) ]]
+                                                        </v-list-tile-avatar>
+                                                        <v-list-tile-content>
+                                                            <v-list-tile-title v-text="item.username">
+                                                            </v-list-tile-title>
+                                                            <v-list-tile-sub-title
+                                                                v-text="item.first_name + ' ' +item.last_name">
+                                                            </v-list-tile-sub-title>
+                                                        </v-list-tile-content>
+                                                    </template>
+                                                </v-autocomplete>
+                                            </v-flex>
+                                        </v-layout>
+                                    </v-container>
+                                </v-form>
+                            </v-card-text>
+                            <v-divider></v-divider>
+                            <v-card-actions>
+                                <v-spacer></v-spacer>
+                                <v-btn color="blue darken-1" flat @click="dialog_event = false">Cancelar</v-btn>
+                                <!-- <v-btn color="blue darken-1" flat @click="resetForm">Limpiar</v-btn> -->
+                                <v-btn color="blue darken-1" flat @click="saveEvent" :disabled="!valid">Guardar
+                                </v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-dialog>
+
+                    <v-dialog ref="dialog_event_edit" v-model="dialog_event_edit" scrollable max-width="600px">
+                            <v-card>
+                                <v-card-title><span class="headline">Editar Evento</span></v-card-title>
+                                <v-divider></v-divider>
+                                <v-card-text style="height: 400px;">
+                                    <v-form method="post" id="eventEditForm" v-model="valid" lazy-validation ref="editForm">
+                                        {% csrf_token %}
+                                        <v-container grid-list-md>
+                                            <v-layout wrap>
+                                                <v-flex xs11 sm11 md11>
+                                                    <v-select ref="edit_event_type" name="edit_event_type" v-model="editedItem.event_type"
+                                                        :items="event_types" item-value="id" item-text="name"
+                                                        label="Tipo Evento" :rules="requiredRule" required autofocus>
+                                                        <template slot="item" slot-scope="data">
+                                                            <v-list-tile-content>
+                                                                <v-list-tile-title>
+                                                                    [[ data.item.name ]]
+                                                                </v-list-tile-title>
+                                                            </v-list-tile-content>
+                                                        </template>
+                                                    </v-select>
+                                                </v-flex>
+
+                                                <v-flex xs11 sm11 md11>
+                                                    <v-autocomplete name="edit_client" v-model="editedItem.client" :items="clients"
+                                                        :loading="isLoading" :search-input.sync="search" chips clearable
+                                                        hide-details hide-selected item-text="dba" item-value="id"
+                                                        label="Buscar Clientes..." :rules="requiredRule" required>
+                                                        <template v-slot:no-data>
+                                                            <v-list-tile>
+                                                                <v-list-tile-title>
+                                                                    Buscar
+                                                                    <strong>Clientes</strong>
+                                                                </v-list-tile-title>
+                                                            </v-list-tile>
+                                                        </template>
+    
+                                                        <template v-slot:selection="{ item, selected }">
+                                                            <v-chip :selected="selected" color="blue-grey"
+                                                                class="white--text">
+                                                                <span v-text="item.dba"></span>
+                                                            </v-chip>
+                                                        </template>
+    
+                                                        <template v-slot:item="{ item }">
+                                                            <v-list-tile-avatar color="indigo"
+                                                                class="headline font-weight-light white--text">
+                                                                [[ item.dba.charAt(0) ]]
+                                                            </v-list-tile-avatar>
+                                                            <v-list-tile-content>
+                                                                <v-list-tile-title v-text="item.dba"></v-list-tile-title>
+                                                                <v-list-tile-sub-title v-text="item.rfc">
+                                                                </v-list-tile-sub-title>
+                                                            </v-list-tile-content>
+                                                        </template>
+                                                    </v-autocomplete>
+                                                </v-flex>
+    
+                                                <v-flex xs11 sm6>
+                                                    <v-dialog ref="edit_StartHour" v-model="edit_dialog_start_hour"
+                                                        :return-value.sync="edit_start_time" persistent lazy full-width
+                                                        width="290px">
+    
+                                                        <template v-slot:activator="{ on }">
+                                                            <v-text-field name="edit_start_time" v-model="editedItem.start_hour"
+                                                                label="Hora inicio" prepend-icon="access_time" readonly
+                                                                v-on="on" :rules="requiredRule" required>
+                                                            </v-text-field>
+                                                        </template>
+    
+                                                        <v-time-picker v-if="edit_dialog_start_hour" v-model="editedItem.start_hour"
+                                                            full-width>
+                                                            <v-spacer></v-spacer>
+                                                            <v-btn flat color="primary" @click="edit_dialog_start_hour = false">
+                                                                Cancel
+                                                            </v-btn>
+                                                            <v-btn flat color="primary"
+                                                                @click="$refs.edit_StartHour.save(editedItem.start_hour)">OK
+                                                            </v-btn>
+                                                        </v-time-picker>
+                                                    </v-dialog>
+                                                </v-flex>
+    
+                                                <v-flex xs11 sm5>
+                                                    <v-dialog ref="edit_EndHour" v-model="edit_dialog_end_hour"
+                                                        :return-value.sync="edit_end_time" persistent lazy full-width
+                                                        width="290px">
+                                                        <template v-slot:activator="{ on }">
+                                                            <v-text-field name="edit_end_time" v-model="editedItem.end_hour"
+                                                                label="Hora fin" prepend-icon="access_time" readonly
+                                                                v-on="on" :rules="requiredRule" required>
+                                                            </v-text-field>
+                                                        </template>
+                                                        <v-time-picker v-if="edit_dialog_end_hour" v-model="editedItem.end_hour" full-width>
+                                                            <v-spacer></v-spacer>
+                                                            <v-btn flat color="primary" @click="edit_dialog_end_hour = false">
+                                                                Cancel
+                                                            </v-btn>
+                                                            <v-btn flat color="primary"
+                                                                @click="$refs.edit_EndHour.save(editedItem.end_hour)">OK
+                                                            </v-btn>
+                                                        </v-time-picker>
+                                                    </v-dialog>
+                                                </v-flex>
+    
+                                                <v-flex xs11 sm11 md11>
+                                                    <v-textarea name="edit_event_description" v-model="editedItem.description"
+                                                        label="Descripción del evento" value="" hint="" rows="2" required
+                                                        :rules="requiredRule"></v-textarea>
+                                                </v-flex>
+    
+                                                <v-flex xs11 sm11 md11>
+                                                    <v-autocomplete name="edit_user" v-model="editedItem.employees" :items="users"
+                                                        :loading="isLoading" :search-input.sync="searchUsers" chips multiple
+                                                        clearable hide-details hide-selected item-text="username"
+                                                        item-value="id" label="Buscar Empleados..." :rules="requiredRule" required>
                                                         <template v-slot:no-data>
                                                             <v-list-tile>
                                                                 <v-list-tile-title>
@@ -152,27 +320,30 @@
                                                                 [[ item.username.charAt(0) ]]
                                                             </v-list-tile-avatar>
                                                             <v-list-tile-content>
-                                                                <v-list-tile-title v-text="item.username"></v-list-tile-title>
-                                                                <v-list-tile-sub-title v-text="item.first_name + ' ' +item.last_name">
+                                                                <v-list-tile-title v-text="item.username">
+                                                                </v-list-tile-title>
+                                                                <v-list-tile-sub-title
+                                                                    v-text="item.first_name + ' ' +item.last_name">
                                                                 </v-list-tile-sub-title>
                                                             </v-list-tile-content>
                                                         </template>
                                                     </v-autocomplete>
                                                 </v-flex>
-                                        </v-layout>
-                                    </v-container>
-                                </v-form>
-                            </v-card-text>
-                            <v-divider></v-divider>
-                            <v-card-actions>
+                                                
+                                            </v-layout>
+                                        </v-container>
+                                    </v-form>
+                                </v-card-text>
+                                <v-divider></v-divider>
+                                <v-card-actions>
                                     <v-spacer></v-spacer>
-                                    <v-btn color="blue darken-1" flat @click="dialog_event = false">Cancelar</v-btn>
-                                    <!-- <v-btn color="blue darken-1" flat @click="resetForm">Limpiar</v-btn> -->
-                                    <v-btn color="blue darken-1" flat @click="saveEvent" :disabled="!valid">Guardar
+                                    <v-btn color="blue darken-1" flat @click="dialog_event_edit = false">Cancelar</v-btn>
+                                    <v-btn color="blue darken-1" flat @click="updateEvent" :disabled="!valid">Guardar
                                     </v-btn>
-                            </v-card-actions>
-                        </v-card>
+                                </v-card-actions>
+                            </v-card>
                     </v-dialog>
+                
                 </v-flex>
             </v-layout>
         </template>
@@ -185,22 +356,29 @@
                         <v-flex xs12 sm6 md4 lg3>
                             <v-card>
                                 <v-card-title>
-                                    <!-- <h4>[[ props.item.date ]]</h4> -->
-                                    <v-btn color="blue darken-1" flat @click="ShowDialogEvents(props.item.date)">[[ props.item.date ]]
+                                    <v-btn color="blue darken-1" flat @click="ShowDialogEvents(props.item.date)">
+                                        [[ props.item.date ]]
                                     </v-btn>
                                 </v-card-title>
                                 <v-divider></v-divider>
-
                                 <v-list dense>
                                     <v-list-tile v-for="s in props.item.slots" :key="s.start">
                                         <v-list-tile-content style="font-size: x-small">
                                             [[ s.start ]] - [[ s.end ]]
-                                            <!-- <v-btn color="blue darken-1" flat @click="ShowDialogEvents">[[ s.start ]] - [[ s.end ]]</v-btn> -->
                                         </v-list-tile-content>
                                         <v-list-tile-content v-for="e in s.events" :key="e.start">
-                                            <v-btn small round color="info" style="height: auto; font-size: x-small">
-                                                [[ e.client.dba ]] <br/>([[ e.responsible_list ]])
-                                            </v-btn>
+                                            <v-menu transition="slide-x-transition" bottom right>
+                                                <template v-slot:activator="{ on }">
+                                                    <v-btn small round color="info" style="height: auto; font-size: x-small" v-on="on">
+                                                            ([[ e.id ]]) [[ e.client.dba ]] <br/>([[ e.responsible_list ]])
+                                                        </v-btn>
+                                                </template>
+                                                <v-list>
+                                                    <v-list-tile v-for="(item, i) in actions" :key="i" @click="EventAction(item.name, e)">
+                                                        <v-list-tile-title>[[ item.title ]]</v-list-tile-title>
+                                                    </v-list-tile>
+                                                </v-list>
+                                            </v-menu>
                                         </v-list-tile-content>
                                     </v-list-tile>
                                 </v-list>
@@ -223,6 +401,7 @@
             selected_date: new Date().toISOString().substr(0, 10),
             dialog_calendar: false,
             dialog_event: false,
+            dialog_event_edit: false,
             dialog_start_hour: false,
             dialog_end_hour: false,
             valid: false,
@@ -233,6 +412,15 @@
             user: null,
             event_description: null,
             event_date: null,
+
+            edit_event_type: null,
+            edit_client: [],
+            edit_dialog_start_hour: false,
+            edit_dialog_end_hour: false,
+            edit_end_time: null,
+            edit_start_time: null,
+            edit_event_description: null,
+            edit_user: [],
 
             requiredRule: [
                 (v) => !!v || 'Campo requerido',
@@ -250,12 +438,29 @@
             rowsPerPageItems: [4, 8, 12],
             pagination: {
                 rowsPerPage: 7
-            }
+            },
+
+            actions: [
+                { title: 'Editar', name:'EDIT' },
+                { title: 'Eliminar', name:'DELETE' },
+            ],
+
+            editedItem: {
+                event_type: [],
+                client: [],
+                date: null,
+                start_hour: null,
+                end_hour: null,
+                description: '',
+                employees: []
+            },
+        },
+        created: function(){
+            this.OnSSE();
         },
         mounted: function () {
             this.getCompanyHours();
             this.getEventTypes();
-            //this.getUsers();
         },
         watch: {
             search(val) {
@@ -264,6 +469,7 @@
                 this.isLoading = true
                 this.getClients();
             },
+            
             searchUsers(val) {
                 // Items have already been loaded
                 if (this.users.length > 0) return
@@ -320,10 +526,10 @@
                 this.event_date = event_date;
                 this.dialog_event = true;
             },
-            saveEvent(){
+            
+            saveEvent() {
                 if (this.valid) {
                     const params = new URLSearchParams();
-                    console.log(this.event_type);
                     params.append('event_type', this.event_type);
                     params.append('client', this.client);
                     params.append('date', this.event_date);
@@ -364,7 +570,141 @@
                         // this.snackbar_color = 'error';
                     });
                 }
-            }
+            },
+
+            EventAction(action, event){
+                if(action === "DELETE"){
+                    this.deleteEvent(event.id);
+                }
+                else if(action === "EDIT"){
+                    this.dialog_event_edit = true;
+                    this.getUsers();
+                    this.getClients();
+                    let employees = [];
+
+                    for(var i = 0; i< event.employees.length; i++){
+                        employees.push(event.employees[i].id);
+                    }
+                    
+                    let event_obj = {
+                        'id': event.id,
+                        'event_type': event.event_type.id,
+                        'client': event.client.id,
+                        'date': event.date,
+                        'start_hour': event.start_hour,
+                        'end_hour': event.end_hour,
+                        'description': event.description,
+                        'employees': employees}
+
+                    this.editedItem = Object.assign({}, event_obj)
+                }
+                else{
+                    console.log('ACTION NOT HANDLED');
+                }
+            },
+
+            deleteEvent(id) {
+                var result = confirm('Estas seguro de eliminar este elemento?');
+                if (result) {
+                    if (id != undefined) {
+                        axios.delete(urlEvents + id + '/').then(response => {
+                            this.getCompanyHours();
+                            // this.clients.splice(index, 1);
+                            // this.dialog = false;
+                            // this.snackbar = true;
+                            // this.snackbar_text = 'Cliente eliminado';
+                            // this.snackbar_color = 'success';
+                            // this.resetForm();
+                        }).catch(error => {
+                            console.log(error);
+                            // this.snackbar = true;
+                            // this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error eliminar cliente';
+                            // this.snackbar_color = 'error';
+                        });
+                    }
+                }
+                else {
+                    console.log('delete cancelled');
+                }
+            },
+            
+            updateEvent(){
+                console.log('HELLO MAKE UPDATE!')
+                console.log(this.editedItem);
+                const params = new URLSearchParams();
+                params.append('event_type', this.editedItem.event_type);
+                params.append('client', this.editedItem.client);
+                params.append('date', this.editedItem.date);
+                params.append('start_hour', this.editedItem.start_hour);
+                params.append('end_hour', this.editedItem.end_hour);
+                params.append('description', this.editedItem.description);
+                params.append('employees', this.editedItem.employees);
+
+
+                axios.patch(urlEvents + this.editedItem.id + '/', params).then(response => {
+                    console.log(response.data);
+                    this.getCompanyHours();
+                    this.dialog_event_edit = false;
+                    // Object.assign(this.clients[this.editedIndex], this.editedItem)
+                    // this.dialogEdit = false;
+                    // this.snackbar = true;
+                    // this.snackbar_text = 'Cliente actualizado';
+                    // this.snackbar_color = 'success';
+
+                }).catch(error => {
+                    console.log(error);
+                    // this.snackbar = true;
+                    // this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error al editar cliente';
+                    // this.snackbar_color = 'error';
+                });
+            },
+
+            OnSSE() {
+                var es = new ReconnectingEventSource('/events/');
+                this.sse = es;
+
+                this.sse.addEventListener('message', ({ data }) => {
+                    let json_data = JSON.parse(data);
+                    let notification = json_data.notification;
+                    console.log(notification);
+                    this.getCompanyHours();
+
+                    // this.snackbar = true;
+                    // this.snackbar_text = notification;
+
+                    // if (json_data.data === "DELETE") {
+                    //     this.snackbar_color = 'warning';
+                    //     let inArray = this.idInArray(json_data.id, this.users);
+                    //     this.users.splice(inArray, 1);
+                    // }
+                    // else { /*CREATE AND UPDATE*/
+                    //     json_data = JSON.parse(json_data.data);
+                    //     let inArray = this.idInArray(json_data.id, this.users);
+
+                    //     if (inArray === false) { /*CREATE*/
+                    //         this.resetForm();
+                    //         this.dialog = false;
+                    //         this.snackbar_color = 'success';
+                    //         this.users.push(
+                    //             {
+                    //                 'id': json_data.id,
+                    //                 'username': json_data.username,
+                    //                 'email': json_data.email,
+                    //                 'first_name': json_data.first_name,
+                    //                 'last_name': json_data.last_name,
+                    //                 'is_active': json_data.is_active,
+                    //                 'available_permissions': json_data.available_permissions
+                    //             })
+                    //     }
+                    //     else { /*UPDATE*/
+                    //         Object.assign(this.users[inArray], json_data)
+                    //         this.dialogEdit = false;
+                    //         this.snackbar_color = 'info';
+                    //     }
+                    // }
+
+                }, false);
+            },
         }
     });
 </script>

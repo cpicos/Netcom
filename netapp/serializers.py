@@ -239,6 +239,13 @@ class EventSerializer(serializers.ModelSerializer):
         event.save()
         for employee in employees:
             event.employees.add(int(employee))
+        
+        serializer = EventSerializer(event)
+        message = JSONRenderer().render(serializer.data)
+        send_event('test', 'message', {
+                'data': message.decode("utf-8"), 
+                'notification': 'Creación evento '  + str(event.id) + ' modificado por ' + request.user.username
+                })
         return event
 
     def get_responsible_list(self, obj):

@@ -64,7 +64,7 @@ class UserViewSet(viewsets.ModelViewSet):
         message = JSONRenderer().render(serializer.data)
         send_event('test', 'message', {
             'data': message.decode("utf-8"), 
-            'notification': 'Actialización usuario '  + user.username + ' modificado por ' + request.user.username
+            'notification': 'Actualización usuario '  + user.username + ' modificado por ' + request.user.username
             })
         return response
     
@@ -145,3 +145,37 @@ class EventViewSet(viewsets.ModelViewSet):
         if self.request.method in ['GET']:
             return EventReadSerializer
         return EventSerializer
+    
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            event = self.get_object()
+            # request = self.request.POST
+            data = self.request.POST
+            response = super(EventViewSet, self).partial_update(request, *args, **kwargs)
+            employees = data.get('employees').split(',')
+            
+            event.employees.clear()
+            for employee in employees:
+                event.employees.add(int(employee))
+            
+            serializer = EventReadSerializer(event)
+            message = JSONRenderer().render(serializer.data)
+            send_event('test', 'message', {
+                'data': message.decode("utf-8"), 
+                'notification': 'Actualización evento '  + str(event.id) + ' modificado por ' + request.user.username
+                })
+        except Exception as err:
+            print(err)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+    def destroy(self, request, *args, **kwargs):
+        event = self.get_object()
+        send_event('test', 'message', {
+            'data': 'DELETE', 
+            'id': event.id,
+            'notification': 'Eliminación evento '  + str(event.id) + ' modificado por ' + request.user.username
+            })
+        super(EventViewSet, self).destroy(request, *args, **kwargs)
+        return Response(status=status.HTTP_204_NO_CONTENT)

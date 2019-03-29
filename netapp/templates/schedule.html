@@ -191,6 +191,26 @@
                                         {% csrf_token %}
                                         <v-container grid-list-md>
                                             <v-layout wrap>
+
+
+                                                <v-flex xs11 sm11 md11>
+                                                        <v-dialog ref="dialog_edit" v-model="dialog_calendar_edit" :return-value.sync="selected_date_edit" persistent lazy
+                                                        full-width width="290px">
+                                                        <template v-slot:activator="{ on }">
+                                                            <v-text-field v-model="selected_date_edit" label="Seleccionar fecha" prepend-icon="event"
+                                                                readonly v-on="on">
+                                                            </v-text-field>
+                                                        </template>
+                                                        <v-date-picker v-model="selected_date_edit" scrollable>
+                                                            <v-spacer></v-spacer>
+                                                            <v-btn flat color="primary" @click="dialog_calendar_edit = false">Cancel</v-btn>
+                                                            <v-btn flat color="primary" @click="$refs.dialog_edit.save(selected_date_edit)">OK</v-btn>
+                                                        </v-date-picker>
+                                                    </v-dialog>
+                                                </v-flex>
+
+
+
                                                 <v-flex xs11 sm11 md11>
                                                     <v-select ref="edit_event_type" name="edit_event_type" v-model="editedItem.event_type"
                                                         :items="event_types" item-value="id" item-text="name"
@@ -399,6 +419,10 @@
         el: '#app',
         data: {
             selected_date: new Date().toISOString().substr(0, 10),
+
+            selected_date_edit: null,
+            dialog_calendar_edit: false,
+
             dialog_calendar: false,
             dialog_event: false,
             dialog_event_edit: false,
@@ -585,12 +609,13 @@
                     for(var i = 0; i< event.employees.length; i++){
                         employees.push(event.employees[i].id);
                     }
+                    this.selected_date_edit = event.date;
                     
                     let event_obj = {
                         'id': event.id,
                         'event_type': event.event_type.id,
                         'client': event.client.id,
-                        'date': event.date,
+                        'date': this.selected_date_edit,
                         'start_hour': event.start_hour,
                         'end_hour': event.end_hour,
                         'description': event.description,
@@ -630,6 +655,7 @@
             
             updateEvent(){
                 console.log('HELLO MAKE UPDATE!')
+                this.editedItem.date = this.selected_date_edit;
                 console.log(this.editedItem);
                 const params = new URLSearchParams();
                 params.append('event_type', this.editedItem.event_type);

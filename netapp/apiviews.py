@@ -151,6 +151,7 @@ class EventViewSet(viewsets.ModelViewSet):
             event = self.get_object()
             # request = self.request.POST
             data = self.request.POST
+            print(data)
             response = super(EventViewSet, self).partial_update(request, *args, **kwargs)
             employees = data.get('employees').split(',')
             
@@ -169,7 +170,6 @@ class EventViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-
     def destroy(self, request, *args, **kwargs):
         event = self.get_object()
         send_event('test', 'message', {
@@ -179,3 +179,13 @@ class EventViewSet(viewsets.ModelViewSet):
             })
         super(EventViewSet, self).destroy(request, *args, **kwargs)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MyEventsViewSet(viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions)
+    queryset = Event.objects.none()
+    serializer_class = EventReadSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Event.objects.filter(employees__id=user.id)

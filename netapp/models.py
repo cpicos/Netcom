@@ -73,6 +73,21 @@ class EventType(models.Model):
         return self.name + ' ' + self.subtype.name
 
 
+class EventStatus(models.Model):
+    name = models.CharField(max_length=20)
+    color_class = models.CharField(max_length=30, default='none')
+    color_class2 = models.CharField(max_length=30, default='none')
+
+    class Meta:
+        db_table = 'event_status'
+        indexes = [
+            models.Index(fields=['name'], name="event_status_name_idx")
+        ]
+    
+    def __str__(self):
+        return self.name
+
+
 class Event(models.Model):
     event_type = models.ForeignKey(EventType, on_delete=models.CASCADE)
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
@@ -83,6 +98,7 @@ class Event(models.Model):
     employees = models.ManyToManyField(User, related_name='employees')
     created_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    status = models.ForeignKey(EventStatus, on_delete=models.CASCADE, default=1)
 
     class Meta:
         db_table = 'event'

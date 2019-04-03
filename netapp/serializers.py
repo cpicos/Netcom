@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Permission
 from django_eventstream import send_event
-from .models import Client, CompanyHours, EventSubtype, EventType, Event
+from .models import Client, CompanyHours, EventSubtype, EventType, Event, EventStatus
 
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
@@ -205,7 +205,7 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ('id', 'date', 'start_hour', 'end_hour', 'description', 'created_at', 'created_by', 'responsible_list', 'event_type', 
-                  'client', )
+                  'client', 'status', )
         extra_kwargs = {
             'id': {'read_only': True},
             'event_type': {'required': True},
@@ -216,7 +216,8 @@ class EventSerializer(serializers.ModelSerializer):
             'description': {'required': True},
             'created_at': {'read_only': True},
             'created_by': {'read_only': True},
-            'responsible_list': {'read_only': True}
+            'responsible_list': {'read_only': True},
+            'status': {'required': True}
         }
     
 
@@ -254,13 +255,20 @@ class EventSerializer(serializers.ModelSerializer):
         return result
 
 
+class EventStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventStatus
+        fields = ('id', 'name', 'color_class', 'color_class2')
+
+
 class EventReadSerializer(EventSerializer):
     event_type = EventTypeSerializer(many=False, read_only=True)
     client = ClientSerializer(many=False, read_only=True)
     employees = UserSerializer(many=True, read_only=True)
     created_by = UserSerializer(many=False, read_only=True)
+    status = EventStatusSerializer(many=False, read_only=True)
 
     class Meta:
         model = Event
         fields = ('id', 'date', 'start_hour', 'end_hour', 'description', 'created_at', 'created_by', 'responsible_list', 'event_type', 
-                  'client', 'employees', )
+                  'client', 'employees', 'status')

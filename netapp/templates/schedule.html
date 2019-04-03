@@ -389,8 +389,8 @@
                                         <v-list-tile-content v-for="e in s.events" :key="e.start">
                                             <v-menu transition="slide-x-transition" bottom right>
                                                 <template v-slot:activator="{ on }">
-                                                    <v-btn small round color="info" style="height: auto; font-size: x-small" v-on="on">
-                                                            ([[ e.id ]]) [[ e.client.dba ]] <br/>([[ e.responsible_list ]])
+                                                    <v-btn small round :color="e.status.color_class2" style="height: auto; font-size: x-small" v-on="on">
+                                                            ([[ e.id ]]) [[ e.client.dba ]] <br/>([[ e.responsible_list ]]) 
                                                         </v-btn>
                                                 </template>
                                                 <v-list>
@@ -466,6 +466,7 @@
 
             actions: [
                 { title: 'Editar', name:'EDIT' },
+                { title: 'Cancelar', name:'CANCEL' },
                 { title: 'Eliminar', name:'DELETE' },
             ],
 
@@ -619,9 +620,30 @@
                         'start_hour': event.start_hour,
                         'end_hour': event.end_hour,
                         'description': event.description,
-                        'employees': employees}
+                        'employees': employees,
+                        'status': event.status.id}
 
                     this.editedItem = Object.assign({}, event_obj)
+                }
+                else if(action === "CANCEL"){
+                    console.log('hey hacer un update con status cancel');
+                    let employees = [];
+                    for(var i = 0; i< event.employees.length; i++){
+                        employees.push(event.employees[i].id);
+                    }
+                    this.selected_date_edit = event.date;
+                    let event_obj = {
+                        'id': event.id,
+                        'event_type': event.event_type.id,
+                        'client': event.client.id,
+                        'date': this.selected_date_edit,
+                        'start_hour': event.start_hour,
+                        'end_hour': event.end_hour,
+                        'description': event.description,
+                        'employees': employees,
+                        'status': 5}
+                    this.editedItem = Object.assign({}, event_obj)
+                    this.updateEvent();
                 }
                 else{
                     console.log('ACTION NOT HANDLED');
@@ -665,6 +687,7 @@
                 params.append('end_hour', this.editedItem.end_hour);
                 params.append('description', this.editedItem.description);
                 params.append('employees', this.editedItem.employees);
+                params.append('status', this.editedItem.status);
 
 
                 axios.patch(urlEvents + this.editedItem.id + '/', params).then(response => {

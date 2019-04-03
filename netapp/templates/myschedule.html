@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block vueapp %}
+<v-app id="app">
+    <template>
+        <div>
+            <v-toolbar flat color="white">
+                    <!-- Para Hoy -->
+                <v-toolbar-title>Mis Actividades</v-toolbar-title>
+                <v-divider class="mx-2" inset vertical></v-divider>
+                <v-spacer></v-spacer>
+            </v-toolbar>
+            <!-- :search="search" -->
+            <v-data-table :headers="headers" :items="myevents" class="elevation-1">
+                <template v-slot:items="props">
+                    <tr :class="props.item.status.color_class">
+                        <td>[[ props.item.id ]]</td>
+                        <td>[[ props.item.client.dba ]]</td>
+                        <td>[[ props.item.event_type.name ]]</td>
+                        <td>[[ props.item.date ]]</td>
+                        <td>[[ props.item.start_hour ]]</td>
+                        <td>[[ props.item.end_hour ]]</td>
+                        <td>[[ props.item.responsible_list ]]</td>
+                        <td class="align-center justify-space-around">
+                            <v-icon v-if="5 !== props.item.status.id" small class="mr-2" @click="EventAction('START', props.item)">
+                                fas fa-play</v-icon>
+                            <v-icon v-if="5 !== props.item.status.id" small class="mr-2" @click="EventAction('STOP', props.item)">fas fa-stop</v-icon>
+                        </td>
+                    </tr>
+
+                    <!-- <td class="text-xs-left">[[ props.item.name ]]</td>
+                    <td class="text-xs-left">[[ props.item.dba ]]</td>
+                    <td class="text-xs-left">[[ props.item.rfc ]]</td>
+                    <td class="justify-center layout px-0">
+                        {% if perms.netapp.change_client %}
+                        <v-icon small class="mr-2" @click="editClient(props.item)">edit</v-icon>
+                        <v-icon small @click="deleteClient(props.item)">delete</v-icon>
+                        {% endif %}
+                    </td> -->
+
+                </template>
+            </v-data-table>
+        </div>
+    </template>
+</v-app>
+{% endblock vueapp %}
+
+{% block vuescript %}
+<script>
+    var app = new Vue({
+        delimiters: ['[[', ']]'],
+        el: '#app',
+        data: {
+            headers: [
+                {
+                    'text': 'Id',
+                    'align': 'left',
+                    'value': 'id'
+                },
+                { 'text': 'Cliente', 'value': 'client' },
+                { 'text': 'Tipo Evento', 'value': 'eventtype' },
+                { 'text': 'Fecha', 'value': 'date' },
+                { 'text': 'Inicio', 'value': 'start_hour' },
+                { 'text': 'Fin', 'value': 'end_hour' },
+                { 'text': 'Responsables', 'value': 'responsibles' },
+                { text: 'Acciones', value: 'id', sorteable: false }
+            ],
+            myevents: []
+        },
+        created: function () {
+            this.OnSSE();
+        },
+        mounted: function () {
+            this.getMyEvents();
+        },
+
+        methods: {
+            getMyEvents() {
+                axios.get(urlMyEvents).then(response => {
+                    console.log(response.data);
+                    this.myevents = response.data;
+                });
+            },
+            OnSSE() {
+                var es = new ReconnectingEventSource('/events/');
+                this.sse = es;
+
+                this.sse.addEventListener('message', ({ data }) => {
+                    let json_data = JSON.parse(data);
+                    let notification = json_data.notification;
+                    console.log(notification);
+                    this.getMyEvents();
+                }, false);
+            },
+
+            EventAction(action, event){
+                if(action === "DELETE"){
+                    this.deleteEvent(event.id);
+                }
+                else if(action === "EDIT"){
+                    this.dialog_event_edit = true;
+                    this.getUsers();
+                    this.getClients();
+                    let employees = [];
+
+                    for(var i = 0; i< event.employees.length; i++){
+                        employees.push(event.employees[i].id);
+                    }
+                    this.selected_date_edit = event.date;
+                    
+                    let event_obj = {
+                        'id': event.id,
+                        'event_type': event.event_type.id,
+                        'client': event.client.id,
+                        'date': this.selected_date_edit,
+                        'start_hour': event.start_hour,
+                        'end_hour': event.end_hour,
+                        'description': event.description,
+                        'employees': employees,
+                        'status': event.status.id}
+
+                    this.editedItem = Object.assign({}, event_obj)
+                }
+                else if(action === "CANCEL"){
+                    let employees = [];
+                    for(var i = 0; i< event.employees.length; i++){
+                        employees.push(event.employees[i].id);
+                    }
+                    this.selected_date_edit = event.date;
+                    let event_obj = {
+                        'id': event.id,
+                        'event_type': event.event_type.id,
+                        'client': event.client.id,
+                        'date': this.selected_date_edit,
+                        'start_hour': event.start_hour,
+                        'end_hour': event.end_hour,
+                        'description': event.description,
+                        'employees': employees,
+                        'status': 5}
+                    this.editedItem = Object.assign({}, event_obj)
+                    this.updateEvent();
+                }
+                else if(action === "START"){
+                    let employees = [];
+                    for(var i = 0; i< event.employees.length; i++){
+                        employees.push(event.employees[i].id);
+                    }
+                    this.selected_date_edit = event.date;
+                    let event_obj = {
+                        'id': event.id,
+                        'event_type': event.event_type.id,
+                        'client': event.client.id,
+                        'date': this.selected_date_edit,
+                        'start_hour': event.start_hour,
+                        'end_hour': event.end_hour,
+                        'description': event.description,
+                        'employees': employees,
+                        'status': 2}
+                    this.editedItem = Object.assign({}, event_obj)
+                    this.updateEvent();
+                }
+                else{
+                    console.log('ACTION NOT HANDLED');
+                }
+            },
+
+            updateEvent(){
+                console.log('HELLO MAKE UPDATE!')
+                this.editedItem.date = this.selected_date_edit;
+                console.log(this.editedItem);
+                const params = new URLSearchParams();
+                params.append('event_type', this.editedItem.event_type);
+                params.append('client', this.editedItem.client);
+                params.append('date', this.editedItem.date);
+                params.append('start_hour', this.editedItem.start_hour);
+                params.append('end_hour', this.editedItem.end_hour);
+                params.append('description', this.editedItem.description);
+                params.append('employees', this.editedItem.employees);
+                params.append('status', this.editedItem.status);
+
+
+                axios.patch(urlEvents + this.editedItem.id + '/', params).then(response => {
+                    console.log(response.data);
+                    this.getCompanyHours();
+                    this.dialog_event_edit = false;
+                    // Object.assign(this.clients[this.editedIndex], this.editedItem)
+                    // this.dialogEdit = false;
+                    // this.snackbar = true;
+                    // this.snackbar_text = 'Cliente actualizado';
+                    // this.snackbar_color = 'success';
+
+                }).catch(error => {
+                    console.log(error);
+                    // this.snackbar = true;
+                    // this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'error al editar cliente';
+                    // this.snackbar_color = 'error';
+                });
+            },
+        }
+    })
+</script>
+{% endblock vuescript %}

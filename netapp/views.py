@@ -21,3 +21,8 @@ class ClientsTemplate(TemplateView):
 @method_decorator(login_required, name='dispatch')
 class ScheduleTemplate(TemplateView):
     template_name = "schedule.html"
+
+
+@method_decorator(login_required, name='dispatch')
+class MyScheduleTemplate(TemplateView):
+    template_name = "myschedule.html"

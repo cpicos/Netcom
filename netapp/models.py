@@ -99,6 +99,7 @@ class Event(models.Model):
     created_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.ForeignKey(EventStatus, on_delete=models.CASCADE, default=1)
+    observations = models.TextField(max_length=500, default='')
 
     class Meta:
         db_table = 'event'

@@ -205,7 +205,7 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ('id', 'date', 'start_hour', 'end_hour', 'description', 'created_at', 'created_by', 'responsible_list', 'event_type', 
-                  'client', 'status', )
+                  'client', 'status', 'observations')
         extra_kwargs = {
             'id': {'read_only': True},
             'event_type': {'required': True},
@@ -217,7 +217,8 @@ class EventSerializer(serializers.ModelSerializer):
             'created_at': {'read_only': True},
             'created_by': {'read_only': True},
             'responsible_list': {'read_only': True},
-            'status': {'required': True}
+            'status': {'required': False},
+            'observations': {'required': False}
         }
     
 
@@ -271,4 +272,4 @@ class EventReadSerializer(EventSerializer):
     class Meta:
         model = Event
         fields = ('id', 'date', 'start_hour', 'end_hour', 'description', 'created_at', 'created_by', 'responsible_list', 'event_type', 
-                  'client', 'employees', 'status')
+                  'client', 'employees', 'status', 'observations')

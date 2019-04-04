@@ -5,11 +5,41 @@
     <template>
         <div>
             <v-toolbar flat color="white">
-                    <!-- Para Hoy -->
+                <!-- Para Hoy -->
                 <v-toolbar-title>Mis Actividades</v-toolbar-title>
                 <v-divider class="mx-2" inset vertical></v-divider>
                 <v-spacer></v-spacer>
             </v-toolbar>
+
+            <v-dialog ref="dialog_event" v-model="dialog_event" scrollable max-width="600px">
+                    <v-card>
+                        <v-card-title><span class="headline">Agregar Observaciones</span></v-card-title>
+                        <v-divider></v-divider>
+                        <v-card-text style="height: 400px;">
+                            <v-form method="post" id="eventForm" v-model="valid" lazy-validation ref="form">
+                                {% csrf_token %}
+                                <v-container grid-list-md>
+                                    <v-layout wrap>
+                                        <v-flex xs11 sm11 md11>
+                                            <v-textarea name="event_observations" v-model="editedItem.observations"
+                                                label="Observaciones del evento" value="" hint="" rows="4" required
+                                                :rules="requiredRule" autofocus></v-textarea>
+                                        </v-flex>
+                                    </v-layout>
+                                </v-container>
+                            </v-form>
+                        </v-card-text>
+                        <v-divider></v-divider>
+                        <v-card-actions>
+                            <v-spacer></v-spacer>
+                            <v-btn color="blue darken-1" flat @click="dialog_event = false">Cancelar</v-btn>
+                            <!-- <v-btn color="blue darken-1" flat @click="resetForm">Limpiar</v-btn> -->
+                            <v-btn color="blue darken-1" flat @click="updateEvent" :disabled="!valid">Guardar
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+            </v-dialog>
+
             <!-- :search="search" -->
             <v-data-table :headers="headers" :items="myevents" class="elevation-1">
                 <template v-slot:items="props">
@@ -22,9 +52,11 @@
                         <td>[[ props.item.end_hour ]]</td>
                         <td>[[ props.item.responsible_list ]]</td>
                         <td class="align-center justify-space-around">
-                            <v-icon v-if="5 !== props.item.status.id" small class="mr-2" @click="EventAction('START', props.item)">
+                            <v-icon v-if="5 !== props.item.status.id" small class="mr-2"
+                                @click="EventAction('START', props.item)">
                                 fas fa-play</v-icon>
-                            <v-icon v-if="5 !== props.item.status.id" small class="mr-2" @click="EventAction('STOP', props.item)">fas fa-stop</v-icon>
+                            <v-icon v-if="5 !== props.item.status.id" small class="mr-2"
+                                @click="EventAction('STOP', props.item)">fas fa-stop</v-icon>
                         </td>
                     </tr>
 
@@ -65,11 +97,29 @@
                 { 'text': 'Responsables', 'value': 'responsibles' },
                 { text: 'Acciones', value: 'id', sorteable: false }
             ],
-            myevents: []
+            myevents: [],
+            editedItem: {
+                event_type: [],
+                client: [],
+                date: null,
+                start_hour: null,
+                end_hour: null,
+                description: '',
+                employees: []
+            }, 
+            dialog_event: false,
+            valid: false,
+
+            event_observations: null,
+            requiredRule: [
+                (v) => !!v || 'Campo requerido',
+            ],
         },
+        
         created: function () {
             this.OnSSE();
         },
+        
         mounted: function () {
             this.getMyEvents();
         },
@@ -93,21 +143,21 @@
                 }, false);
             },
 
-            EventAction(action, event){
-                if(action === "DELETE"){
+            EventAction(action, event) {
+                if (action === "DELETE") {
                     this.deleteEvent(event.id);
                 }
-                else if(action === "EDIT"){
+                else if (action === "EDIT") {
                     this.dialog_event_edit = true;
                     this.getUsers();
                     this.getClients();
                     let employees = [];
 
-                    for(var i = 0; i< event.employees.length; i++){
+                    for (var i = 0; i < event.employees.length; i++) {
                         employees.push(event.employees[i].id);
                     }
                     this.selected_date_edit = event.date;
-                    
+
                     let event_obj = {
                         'id': event.id,
                         'event_type': event.event_type.id,
@@ -117,13 +167,15 @@
                         'end_hour': event.end_hour,
                         'description': event.description,
                         'employees': employees,
-                        'status': event.status.id}
+                        'status': event.status.id
+                    }
 
                     this.editedItem = Object.assign({}, event_obj)
                 }
-                else if(action === "CANCEL"){
+                
+                else if (action === "CANCEL") {
                     let employees = [];
-                    for(var i = 0; i< event.employees.length; i++){
+                    for (var i = 0; i < event.employees.length; i++) {
                         employees.push(event.employees[i].id);
                     }
                     this.selected_date_edit = event.date;
@@ -136,13 +188,15 @@
                         'end_hour': event.end_hour,
                         'description': event.description,
                         'employees': employees,
-                        'status': 5}
+                        'status': 5
+                    }
                     this.editedItem = Object.assign({}, event_obj)
                     this.updateEvent();
                 }
-                else if(action === "START"){
+                
+                else if (action === "START") {
                     let employees = [];
-                    for(var i = 0; i< event.employees.length; i++){
+                    for (var i = 0; i < event.employees.length; i++) {
                         employees.push(event.employees[i].id);
                     }
                     this.selected_date_edit = event.date;
@@ -155,19 +209,45 @@
                         'end_hour': event.end_hour,
                         'description': event.description,
                         'employees': employees,
-                        'status': 2}
+                        'status': 2,
+                        'observations': ''
+                    }
                     this.editedItem = Object.assign({}, event_obj)
                     this.updateEvent();
                 }
-                else{
+                
+                else if (action === "STOP") {
+                    console.log('MAKE STOP');
+                    this.dialog_event = true;
+                    let employees = [];
+                    for (var i = 0; i < event.employees.length; i++) {
+                        employees.push(event.employees[i].id);
+                    }
+                    this.selected_date_edit = event.date;
+                    let event_obj = {
+                        'id': event.id,
+                        'event_type': event.event_type.id,
+                        'client': event.client.id,
+                        'date': this.selected_date_edit,
+                        'start_hour': event.start_hour,
+                        'end_hour': event.end_hour,
+                        'description': event.description,
+                        'employees': employees,
+                        'status': 3,
+                        'observations': event.observations
+                    }
+                    this.editedItem = Object.assign({}, event_obj)
+                    // this.updateEvent();
+                }
+                else {
                     console.log('ACTION NOT HANDLED');
                 }
             },
 
-            updateEvent(){
+            updateEvent() {
                 console.log('HELLO MAKE UPDATE!')
                 this.editedItem.date = this.selected_date_edit;
-                console.log(this.editedItem);
+                // this.editedItem.observations = this.event_observations;
                 const params = new URLSearchParams();
                 params.append('event_type', this.editedItem.event_type);
                 params.append('client', this.editedItem.client);
@@ -177,12 +257,15 @@
                 params.append('description', this.editedItem.description);
                 params.append('employees', this.editedItem.employees);
                 params.append('status', this.editedItem.status);
+                params.append('observations', this.editedItem.observations);
 
 
                 axios.patch(urlEvents + this.editedItem.id + '/', params).then(response => {
                     console.log(response.data);
-                    this.getCompanyHours();
+                    //this.getCompanyHours();
                     this.dialog_event_edit = false;
+
+                    if(this.dialog_event){this.dialog_event = false}
                     // Object.assign(this.clients[this.editedIndex], this.editedItem)
                     // this.dialogEdit = false;
                     // this.snackbar = true;

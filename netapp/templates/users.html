@@ -197,10 +197,11 @@
         delimiters: ['[[', ']]'],
         el: '#app',
         data: {
+            /*data source*/
             users: [],
-            search: '',
-            searchPerm: '',
+            /*end data source*/
 
+            /*parameters*/
             headers: [
                 {
                     text: 'Id',
@@ -214,55 +215,34 @@
                 { text: 'Activo', value: 'is_active' },
                 { text: 'Acciones', value: 'id', sorteable: false }
             ],
+            search: '',
+            searchPerm: '',
+            valid: false,
+            /*end parameters*/
 
-            snackbar: false,
-            snackbar_text: '',
-            snackbar_color: '',
-            y: 'vertical',
-            x: null,
-            mode: '',
-            timeout: 3000,
-
+            /*dialogs*/
             dialog: false,
             dialogEdit: false,
             dialogUserSettings: false,
-            valid: false,
+            /*end dialogs*/
 
+            /*fields*/
             username: '',
-            editusername: '',
-            usernameRules: [
-                (v) => !!v || 'Usuario es requerido',
-                (v) => (v && v.length <= 10) || 'Usuario debe ser menos de 10 caracteres'
-            ],
-
             password: '',
-            passwordRules: [
-                (v) => !!v || 'Contraseña es requerido'
-            ],
-
             confirmpass: '',
-            confirmpassRules: [
-                (v) => !!v || 'Contraseña es requerido'
-            ],
-
             email: '',
-            editemail: '',
-            emailRules: [
-                (v) => /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'Correo debe ser valido'
-            ],
-
             first_name: '',
-            editfirst_name: '',
-            firstNameRules: [
-                (v) => !!v || 'Nombre es requerido'
-            ],
-
             last_name: '',
-            editlast_name: '',
-            lastNameRules: [
-                (v) => !!v || 'Apellido es requerido'
-            ],
+            /*end fields*/
 
+            /*edit fields*/
+            editusername: '',
+            editemail: '',
+            editfirst_name: '',
+            editlast_name: '',
+            /*end edit fields*/
+
+            /*edited object*/
             editedItem: {
                 username: '',
                 email: '',
@@ -272,6 +252,39 @@
                 is_active: '',
                 available_permissions: []
             },
+            /*end edited object*/
+
+            /*rules*/
+            usernameRules: [
+                (v) => !!v || 'Usuario es requerido',
+                (v) => (v && v.length <= 10) || 'Usuario debe ser menos de 10 caracteres'
+            ],
+            passwordRules: [
+                (v) => !!v || 'Contraseña es requerido'
+            ],
+            confirmpassRules: [
+                (v) => !!v || 'Contraseña es requerido'
+            ],
+            emailRules: [
+                (v) => /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'Correo debe ser valido'
+            ],
+            firstNameRules: [
+                (v) => !!v || 'Nombre es requerido'
+            ],
+            lastNameRules: [
+                (v) => !!v || 'Apellido es requerido'
+            ],
+            /*end rules*/
+
+            /*snackbar*/
+            snackbar: false,
+            snackbar_text: '',
+            snackbar_color: '',
+            y: 'vertical',
+            x: null,
+            mode: '',
+            timeout: 3000,
+            /*end snackbar*/
         },
 
         computed: {
@@ -308,35 +321,67 @@
                 });
             },
 
-            saveUser() {
-                if (this.valid) {
-                    const params = new URLSearchParams();
+            prepareParams(method) {
+                const params = new URLSearchParams();
+                if (method === 'POST') {
                     params.append('username', this.username);
-                    params.append('password', this.password);
                     params.append('email', this.email);
+                    params.append('password', this.password);
                     params.append('first_name', this.first_name);
                     params.append('last_name', this.last_name);
                     params.append('is_active', false);
+                }
+                else if (method === 'PATCH'){
+                    params.append('username', this.editedItem.username);
+                    params.append('email', this.editedItem.email);
+                    // params.append('password', this.password);
+                    params.append('first_name', this.editedItem.first_name);
+                    params.append('last_name', this.editedItem.last_name);
+                    params.append('is_active', this.editedItem.is_active);
+                }
+                return params;
+            },
 
-                    axios.post(urlUsers, params).then(response => {
+            successMessage(text, color) {
+                this.resetForm();
+                if (this.dialog) this.dialog = false;
+                if (this.dialogEdit) this.dialogEdit = false;
+                //if (this.dialogUserSettings) this.dialogUserSettings = false;
+                this.snackbar = true;
+                this.snackbar_text = text;
+                this.snackbar_color = color;
+            },
+
+            errorMessage(error) {
+                this.snackbar = true;
+                this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText;
+                this.snackbar_color = 'error';
+            },
+
+            saveUser() {
+                if (this.valid) {
+                    let method = 'POST';
+                    axios.post(urlUsers, this.prepareParams(method)).then(response => {
+                        //this.successMessage('Creación exitosa', 'success'); onSSE
                     }).catch(error => {
-                        this.snackbar = true;
-                        this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
-                        this.snackbar_color = 'error';
+                        this.errorMessage(error);
                     });
+                }
+                else {
+                    alert('Favor de verificar el formulario');
                 }
             },
 
             deleteUser(item) {
-                const index = this.users.indexOf(item);
                 var result = confirm('Estas seguro de eliminar este elemento?');
                 if (result) {
                     if (item != undefined) {
+                        const index = this.users.indexOf(item);
+                        let method = 'DELETE';
                         axios.delete(urlUsers + item.id + '/').then(response => {
+                            //this.successMessage('Eliminación exitosa', 'success'); onSSE
                         }).catch(error => {
-                            this.snackbar = true;
-                            this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
-                            this.snackbar_color = 'error';
+                            this.errorMessage(error);
                         });
                     }
                 }
@@ -352,18 +397,11 @@
             },
 
             updateUser() {
-                const params = new URLSearchParams();
-                params.append('username', this.editedItem.username);
-                params.append('email', this.editedItem.email);
-                params.append('first_name', this.editedItem.first_name);
-                params.append('last_name', this.editedItem.last_name);
-                params.append('is_active', this.editedItem.is_active);
-
-                axios.patch(urlUsers + this.editedItem.id + '/', params).then(response => {
+                let method = 'PATCH';
+                axios.patch(urlUsers + this.editedItem.id + '/', this.prepareParams(method)).then(response => {
+                    //this.successMessage('Actualización exitosa', 'success'); onSSE
                 }).catch(error => {
-                    this.snackbar = true;
-                    this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Usuario ya existe';
-                    this.snackbar_color = 'error';
+                    this.errorMessage(error);
                 });
             },
 
@@ -387,18 +425,14 @@
                     axios.patch(urlUserPerms + user.id + '/', params).then(response => {
                         this.editedItem.available_permissions = response.data.available_permissions;
                     }).catch(error => {
-                        this.snackbar = true;
-                        this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Error al modificar permiso';
-                        this.snackbar_color = 'error';
+                        this.errorMessage(error);
                     });
                 }
                 else {
                     axios.post(urlUserPerms, params).then(response => {
                         this.editedItem.available_permissions = response.data.available_permissions;
                     }).catch(error => {
-                        this.snackbar = true;
-                        this.snackbar_text = 'Status : ' + error.response.status + ' Message : ' + error.response.statusText + ' Text : ' + 'Error al modificar permiso';
-                        this.snackbar_color = 'error';
+                        this.errorMessage(error);
                     });
                 }
             },
@@ -411,11 +445,8 @@
                     let json_data = JSON.parse(data);
                     let notification = json_data.notification;
 
-                    this.snackbar = true;
-                    this.snackbar_text = notification;
-
                     if (json_data.data === "DELETE") {
-                        this.snackbar_color = 'warning';
+                        this.successMessage(notification, 'warning');
                         let inArray = this.idInArray(json_data.id, this.users);
                         this.users.splice(inArray, 1);
                     }
@@ -425,8 +456,7 @@
 
                         if (inArray === false) { /*CREATE*/
                             this.resetForm();
-                            this.dialog = false;
-                            this.snackbar_color = 'success';
+                            this.successMessage(notification, 'success');
                             this.users.push(
                                 {
                                     'id': json_data.id,
@@ -440,8 +470,7 @@
                         }
                         else { /*UPDATE*/
                             Object.assign(this.users[inArray], json_data)
-                            this.dialogEdit = false;
-                            this.snackbar_color = 'info';
+                            this.successMessage(notification, 'success');
                         }
                     }
 

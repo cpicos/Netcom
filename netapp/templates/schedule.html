@@ -558,7 +558,7 @@
                     params.append('description', this.event_description);
                     params.append('event_type', this.event_type);
                     params.append('client', this.client);
-                    params.append('employees', this.user);
+                    params.append('employees', this.user); /*M2M*/
                 }
                 else if (method === 'PATCH') {
                     params.append('date', this.editedItem.date);
@@ -568,7 +568,7 @@
                     params.append('event_type', this.editedItem.event_type);
                     params.append('client', this.editedItem.client);
                     params.append('status', this.editedItem.status);
-                    params.append('employees', this.editedItem.employees);
+                    params.append('employees', this.editedItem.employees); /*M2M*/
                 }
                 return params;
             },
